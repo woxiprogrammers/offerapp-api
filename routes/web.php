@@ -22,7 +22,7 @@ $router->get('/', function () use ($router) {
 //$router->group(['middleware' => 'auth'], function () use ($router) {
 //    $router->post('/login', 'API\AuthController@login');
 //});
-$router->group([['middleware' => 'auth']], function () use ($router) {
+$router->group([['middleware' => 'auth:api']], function () use ($router) {
     $router->post('/register', 'RegisterController@register');
     $router->post('/login', 'LoginController@login');
     $router->post('/change-password', 'LoginController@changePassword');
