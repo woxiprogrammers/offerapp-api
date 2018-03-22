@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 class ExampleController extends Controller
 {
     /**
@@ -9,10 +13,10 @@ class ExampleController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
-        //
-    }
 
-    //
+
+
+
+
+
 }

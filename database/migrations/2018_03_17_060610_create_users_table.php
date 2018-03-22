@@ -23,6 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('email',255)->nullable();
             $table->string('mobile_no',15);
             $table->string('profile_picture',45)->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
     }
