@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Hamcrest\Thingy;
 use Illuminate\Auth\Authenticatable;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $fillable = [
-        'name', 'email','password'
+        'first_name', 'last_name', 'email', 'password', 'mobile_no', 'profile_picture', 'role_id'
     ];
 
     /**
