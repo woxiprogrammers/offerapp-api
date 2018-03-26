@@ -8,6 +8,7 @@
 
 namespace App\Http\Controllers\Seller;
 
+use App\OfferStatus;
 use App\Seller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,12 +33,15 @@ class OfferController extends BaseController
             $iterator = 0;
             $offerList = array();
             foreach($sellerAddresses as $key => $sellerAddress){
-                $offers = $sellerAddress->offer->orderBy('created_at','desc');
+                if($request['status_slug'] == 'all'){
+                    $offers = $sellerAddress->offer->orderBy('created_at','desc');
+                }else{
+                    $offerStatusId = OfferStatus::where('slug',$request['status_slug'])->pluck('id')->first();
+                    $offers = $sellerAddress->offer->where('offer_status_id',$offerStatusId)->orderBy('created_at','desc');
+                }
                 foreach ($offers as $key2 => $offer){
-                    $offerList[$iterator]['seller_id'] = $seller['id'];
-                    $offerList[$iterator]['seller_name'] = $user['first_name'].' '.$user['last_name'];
-                    $offerList[$iterator]['seller_address_id'] = $sellerAddress['id'];
                     $offerList[$iterator]['offer_id'] = $offer['id'];
+                    $offerList[$iterator]['seller_address_id'] = $sellerAddress['id'];
                     $offerList[$iterator]['offer_type_id'] = $offer['offer_type_id'];
                     $offerList[$iterator]['offer_type_name'] = $offer->offerType->name;
                     $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
@@ -45,6 +49,9 @@ class OfferController extends BaseController
                     $offerList[$iterator]['offer_description'] = $offer->description;
                     $offerList[$iterator]['valid_from'] = $offer['valid_from'];
                     $offerList[$iterator]['valid_to'] = $offer['valid_to'];
+                    $offerList[$iterator]['wishlist_count'] = 1;
+                    $offerList[$iterator]['interested_count'] = 1;
+                    $offerList[$iterator]['grabbed_count'] = 1;
                     $iterator++;
                 }
             }
