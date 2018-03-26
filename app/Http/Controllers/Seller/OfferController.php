@@ -34,10 +34,10 @@ class OfferController extends BaseController
             $offerList = array();
             foreach($sellerAddresses as $key => $sellerAddress){
                 if($request['status_slug'] == 'all'){
-                    $offers = $sellerAddress->offer->orderBy('created_at','desc');
+                    $offers = $sellerAddress->offer;
                 }else{
                     $offerStatusId = OfferStatus::where('slug',$request['status_slug'])->pluck('id')->first();
-                    $offers = $sellerAddress->offer->where('offer_status_id',$offerStatusId)->orderBy('created_at','desc');
+                    $offers = $sellerAddress->offer->where('offer_status_id',$offerStatusId);
                 }
                 foreach ($offers as $key2 => $offer){
                     $offerList[$iterator]['offer_id'] = $offer['id'];
