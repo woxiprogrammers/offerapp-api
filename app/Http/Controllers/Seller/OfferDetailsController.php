@@ -26,17 +26,22 @@ class OfferController extends BaseController{
     public function getOfferDetails(Request $request){
         try{
             $offerId = $request-> only(id);
-            $offers = Offer::where('id','$offerId')->get();
-            $iterator = 0;
+            $offers = Offer::where('id' , $offerId)->get();
             $offerList = array();
             foreach($offers as $key => $offer){
-                $offerList[$iterator]['offer_id'] = $offer['id'];
-                $offerList[$iterator]['offer_type_id'] = $offer['id'];
-                $offerList[$iterator]['offer_id'] = $offer['id'];
-                $offerList[$iterator]['offer_type_id'] = $offer['id'];
+                $offerList['offer_id'] = $offer['id'];
+                $offerList['seller_address_id'] = $offer['seller_address_id'];
+                $offerList['offer_type_id'] = $offer['offer_type_id'];
+                $offerList['offer_type_name'] = $offer->offerType->name;
+                $offerList['offer_status_id'] = $offer['offer_status_id'];
+                $offerList['offer_status_name'] = $offer->offerStatus->name;
+                $offerList['offer_description'] = $offer->description;
+                $offerList['valid_from'] = $offer['valid_from'];
+                $offerList['valid_to'] = $offer['valid_to'];
+
             }
 
-
+            $data['offer_list'] = $offerList;
             $message = 'Success';
             $status = 200;
         }catch(\Exception $e){
