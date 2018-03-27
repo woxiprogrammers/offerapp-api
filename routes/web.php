@@ -17,6 +17,12 @@ $app->get('/', function () use ($app) {
 
 $app->post('login',array('uses' => 'LoginController@login'));
 
-$app->post('details',array('uses' => 'Seller\OfferDetailsController@getOfferDetails'));
 
 
+
+$app->group(['prefix' => 'seller'], function () use($app){
+    $app->group(['prefix' => 'offer'], function () use($app){
+        $app->post('listing', array('uses' => 'Seller\OfferController@getOfferListing'));
+        $app->post('detail',array('uses' => 'Seller\OfferController@getOfferDetail'));
+    });
+});
