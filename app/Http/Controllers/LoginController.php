@@ -27,7 +27,7 @@ class LoginController extends BaseController
 
     public function login(Request $request){
         try{
-            $credentials = $request->only('email','password');
+            $credentials = $request->only('mobile_no','password');
             if($token = JWTAuth::attempt($credentials)){
                 $user = Auth::user();
                 $message = "Logged in successfully!!";

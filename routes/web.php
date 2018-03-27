@@ -16,3 +16,7 @@ $app->get('/', function () use ($app) {
 });
 
 $app->post('login',array('uses' => 'LoginController@login'));
+
+$app->post('details',array('uses' => 'Seller\OfferDetailsController@getOfferDetails'));
+
+
