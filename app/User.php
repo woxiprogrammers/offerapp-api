@@ -19,9 +19,12 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      *
      * @var array
      */
-    protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'mobile_no', 'profile_picture', 'role_id'
+
+    protected $table = 'users';
+
+    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'mobile_no', 'profile_picture', 'role_id'
     ];
+
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -29,7 +32,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $hidden = [
-        'password',
+        'password', 'token', 'remember_token',
     ];
 
     public function getJWTIdentifier()
