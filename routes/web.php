@@ -19,7 +19,9 @@ $app->post('login',array('uses' => 'LoginController@login'));
 $app->post('register',array('uses' => 'RegisterController@register'));
 $app->post('getOtp',array('uses' => 'RegisterController@getOtp'));
 
-
+$app->group(['prefix' => 'customer'], function () use($app){
+    $app->post('location',array('uses' => 'Customer\CustomerController@getLocation'));
+});
 
 
 
