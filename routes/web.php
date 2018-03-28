@@ -15,10 +15,10 @@ $app->get('/', function () use ($app) {
     return $app->version();
 });
 
-$app->post('login',array('uses' => 'LoginController@login'));
-$app->post('register',array('uses' => 'RegisterController@register'));
-$app->post('getOtp',array('uses' => 'OtpVerificationController@getOtp'));
-$app->post('verifyOtp',array('uses' => 'OtpVerificationController@verifyOtp'));
+$app->post('login',array('uses' => 'Auth\LoginController@login'));
+$app->post('register',array('uses' => 'Auth\RegisterController@register'));
+$app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
+$app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 
 

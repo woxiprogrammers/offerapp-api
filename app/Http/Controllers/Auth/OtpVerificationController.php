@@ -45,11 +45,15 @@ class OtpVerificationController extends BaseController
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 $smsStatus = curl_exec($ch);
+                curl_close($ch);
                 $message = "Sms sent successfully";
+                $response = $smsStatus;
+
                 $otpGen = new Otp();
                 $otpGen['mobile_no'] = $mobile_no;
                 $otpGen['otp'] = $otp;
                 $otpGen->save();
+
             }
             $status = 200;
         }catch (\Exception $e){
@@ -74,8 +78,9 @@ class OtpVerificationController extends BaseController
     public function verifyOtp(Request $request){
         try{
             $mobile_no = $request['mobile_no'];
-            $otp = Otp::where('mobile_no',$request['mobile_no'])->pluck('otp')->last();
             $userotp = $request['otp'];
+            $otp = Otp::where('mobile_no',$mobile_no)->pluck('otp')->last();
+            
             if($otp == $userotp) {
                 $message = "Valid Otp";
                 $status = 200;
