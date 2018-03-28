@@ -17,7 +17,8 @@ $app->get('/', function () use ($app) {
 
 $app->post('login',array('uses' => 'LoginController@login'));
 $app->post('register',array('uses' => 'RegisterController@register'));
-$app->post('getOtp',array('uses' => 'RegisterController@getOtp'));
+$app->post('getOtp',array('uses' => 'OtpVerificationController@getOtp'));
+$app->post('verifyOtp',array('uses' => 'OtpVerificationController@verifyOtp'));
 
 
 
