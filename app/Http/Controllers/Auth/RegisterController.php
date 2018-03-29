@@ -6,7 +6,7 @@
  * Time: 10:32 AM
  */
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
 use App\User;
 
@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Tymon\JWTAuth\Facades\JWTAuth;
-
 
 class RegisterController extends BaseController
 {
