@@ -20,7 +20,9 @@ $app->post('register',array('uses' => 'Auth\RegisterController@register'));
 $app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
 $app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
-
+$app->group(['prefix' => 'customer'], function () use($app){
+    $app->post('location',array('uses' => 'Customer\CustomerController@getLocation'));
+});
 
 
 
