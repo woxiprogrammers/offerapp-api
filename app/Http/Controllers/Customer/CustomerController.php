@@ -8,6 +8,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use Cornford\Googlmapper\Facades\MapperFacade as Mapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
@@ -17,33 +18,61 @@ class CustomerController extends BaseController
     public function getLocation(Request $request)
     {
         try{
+            $coordinates = $request['coords'];
 
-            $apiKey = urlencode(env('GOOGLE_KEY'));
-            $latlng = implode(',',$request['co-ordinates']);
-            $data = array('key' => $apiKey);
-            // Send the POST request with cURL
-            $ch = curl_init('https://maps.googleapis.com/maps/api/geocode/json?latlng='.$latlng.'&');
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $response = curl_exec($ch);
-            curl_close($ch);
-            // Process your response here
-            $address = json_decode($response);
-            if(count($address->results) > 0){
-                return $address->results[0]->formatted_address;
+            $location = Mapper::location($coordinates['latitude'], $coordinates['longitude']);
+            $address = $location->getAddress();
+            $splitAddress = explode(',', $address);
+            $shortAddress = '';
+            if (count($splitAddress)>2){
+                $size = count($splitAddress)-2;
             }else{
-                return '';
+                $size = count($splitAddress);
             }
+
+            for ($i = 0; $i < $size; ++$i) {
+                $shortAddress = $shortAddress.' '.$splitAddress[$i];
+            }
+
+            $data = [
+                'locationName' => $shortAddress,
+                'status' => 200
+            ];
         }catch(\Exception $e){
-            dd($e->getMessage());
 
             $data = [
                 'action' => 'Get Location',
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
             ];
-            Log::citical(json_encode($data));
         }
+        return response()->json($data);
     }
 
+    public function setLocation(Request $request)
+    {
+        try{
+            $address = $request['locationName'];
+
+            $location = Mapper::location($address);
+            $latitude = $location->getLatitude();
+            $longitude = $location->getLongitude();
+
+
+            $data = [
+                'locationName' => $address,
+                'coords' => [
+                    'latitude' => $latitude,
+                    'lonitude' => $longitude
+                ],
+                'status' => 200
+            ];
+        }catch(\Exception $e){
+
+            $data = [
+                'action' => 'Set Location',
+                'exception' => $e->getMessage(),
+            ];
+        }
+        return response()->json($data);
+    }
 }

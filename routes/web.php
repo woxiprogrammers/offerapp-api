@@ -21,7 +21,9 @@ $app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
 $app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
-    $app->post('location',array('uses' => 'Customer\CustomerController@getLocation'));
+    $app->post('getlocation',array('uses' => 'Customer\CustomerController@getLocation'));
+    $app->post('setlocation',array('uses' => 'Customer\CustomerController@setLocation'));
+
 });
 
 
