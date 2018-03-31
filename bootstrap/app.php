@@ -31,6 +31,7 @@ $app->withFacades(true, [
     Tymon\JWTAuth\Facades\JWTAuth::class => 'JWTAuth',
     Tymon\JWTAuth\Facades\JWTFactory::class => 'JWTFactory',
     Cornford\Googlmapper\Facades\MapperFacade::class => 'Mapper',
+    Ixudra\Curl\Facades\Curl::class, 'Curl',
 ]);
 
 $app->instance('path.config', app()->basePath() . DIRECTORY_SEPARATOR . 'config');
@@ -93,7 +94,7 @@ $app->singleton(
  $app->register(App\Providers\EventServiceProvider::class);
  $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
  $app->register(Cornford\Googlmapper\MapperServiceProvider::class);
-
+ $app->register(Ixudra\Curl\CurlServiceProvider::class);
 
     /*
     |--------------------------------------------------------------------------

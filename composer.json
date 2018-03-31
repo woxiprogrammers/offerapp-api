@@ -10,7 +10,8 @@
         "vlucas/phpdotenv": "~2.2",
         "tymon/jwt-auth": "1.0.0-beta.3",
         "cornford/googlmapper": "2.*",
-        "laravelista/lumen-vendor-publish": "^2.1"
+        "laravelista/lumen-vendor-publish": "^2.1",
+        "ixudra/curl": "^6.16"
 
     },
     "require-dev": {

@@ -11,6 +11,7 @@ namespace App\Http\Controllers\Customer;
 use Cornford\Googlmapper\Facades\MapperFacade as Mapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Ixudra\Curl\Facades\Curl;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class CustomerController extends BaseController
@@ -19,9 +20,14 @@ class CustomerController extends BaseController
     {
         try{
             $coordinates = $request['coords'];
+            $latlng = implode(",", [$coordinates['latitude'], $coordinates['longitude']]);
+            $apiKey = urlencode(env('GOOGLE_API_KEY'));
 
-            $location = Mapper::location($coordinates['latitude'], $coordinates['longitude']);
-            $address = $location->getAddress();
+            $response = Curl::to('https://maps.googleapis.com/maps/api/geocode/json?latlng='.$latlng.'&key='.$apiKey)
+                              ->post();
+
+            $result = json_decode($response);
+            $address = $result->results[0]->formatted_address;
             $splitAddress = explode(',', $address);
             $shortAddress = '';
             if (count($splitAddress)>2){
