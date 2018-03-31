@@ -16,8 +16,13 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class CustomerController extends BaseController
 {
-    public function getLocation(Request $request)
-    {
+    public function __construct(){
+        $this->middleware('jwt.auth');
+        if(!Auth::guest()) {
+            $this->user = Auth::user();
+        }
+    }       
+    public function getLocation(Request $request){
         try{
             $coordinates = $request['coords'];
             $latlng = implode(",", [$coordinates['latitude'], $coordinates['longitude']]);
@@ -29,15 +34,15 @@ class CustomerController extends BaseController
             $result = json_decode($response);
             $address = $result->results[0]->formatted_address;
             $splitAddress = explode(',', $address);
-            $shortAddress = '';
+            $shortAddress = $splitAddress[0];
             if (count($splitAddress)>2){
-                $size = count($splitAddress)-2;
+                $splitAddressCount = count($splitAddress)-3;
             }else{
-                $size = count($splitAddress);
+                $splitAddressCount = count($splitAddress);
             }
 
-            for ($i = 0; $i < $size; ++$i) {
-                $shortAddress = $shortAddress.' '.$splitAddress[$i];
+            for ($iterator = 1; $iterator < $splitAddressCount; ++$iterator) {
+                $shortAddress = $shortAddress.','.$splitAddress[$iterator];
             }
 
             $data = [
@@ -54,8 +59,7 @@ class CustomerController extends BaseController
         return response()->json($data);
     }
 
-    public function setLocation(Request $request)
-    {
+    public function setLocation(Request $request){
         try{
             $address = $request['locationName'];
 
