@@ -19,7 +19,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class OfferController extends BaseController
 {
-    public function __construct(){
+    public function __construct() {
         $this->middleware('jwt.auth');
         if(!Auth::guest()) {
             $this->user = Auth::user();

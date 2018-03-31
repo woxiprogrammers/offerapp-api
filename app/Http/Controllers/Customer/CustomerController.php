@@ -10,6 +10,7 @@ namespace App\Http\Controllers\Customer;
 
 use Cornford\Googlmapper\Facades\MapperFacade as Mapper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Ixudra\Curl\Facades\Curl;
 use Laravel\Lumen\Routing\Controller as BaseController;
@@ -21,7 +22,7 @@ class CustomerController extends BaseController
         if(!Auth::guest()) {
             $this->user = Auth::user();
         }
-    }       
+    }
     public function getLocation(Request $request){
         try{
             $coordinates = $request['coords'];
@@ -54,6 +55,7 @@ class CustomerController extends BaseController
             $data = [
                 'action' => 'Get Location',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
         }
         return response()->json($data);
@@ -66,7 +68,6 @@ class CustomerController extends BaseController
             $location = Mapper::location($address);
             $latitude = $location->getLatitude();
             $longitude = $location->getLongitude();
-
 
             $data = [
                 'locationName' => $address,
@@ -81,6 +82,7 @@ class CustomerController extends BaseController
             $data = [
                 'action' => 'Set Location',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
         }
         return response()->json($data);

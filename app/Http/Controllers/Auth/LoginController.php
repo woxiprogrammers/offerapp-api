@@ -18,6 +18,13 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class LoginController extends BaseController
 {
 
+    public function __construct()
+    {
+        $this->middleware('jwt.auth',['except' => ['login']]);
+        if(!Auth::guest()) {
+            $this->user = Auth::user();
+        }
+    }
 
     public function login(Request $request){
         try{
