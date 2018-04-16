@@ -42,7 +42,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
             $app->post('list',array('uses' => 'Customer\InterestedOfferController@getInterestedOffers'));
             $app->post('add',array('uses' => 'Customer\InterestedOfferController@setInterestedOffers'));
             $app->post('detail',array('uses' => 'Customer\OfferDetailController@getInterestedOfferDetail'));
-            $app->post('offerimages',array('uses' => 'Customer\OfferDetailController@getOfferImages'));
+            $app->post('images',array('uses' => 'Customer\OfferDetailController@getOfferImages'));
         });
     });
 
