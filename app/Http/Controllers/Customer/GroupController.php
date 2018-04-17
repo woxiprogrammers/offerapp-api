@@ -18,6 +18,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class GroupController extends BaseController
 {
+    protected $perPage = 5;
     public function __construct(){
         $this->middleware('jwt.auth');
         if(!Auth::guest()) {
@@ -26,10 +27,9 @@ class GroupController extends BaseController
     }
     public function getGroupList(Request $request){
         try{
-            $user_id = $request['userId'];
+            $user_id = Auth::user()->id;
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
-            $groups[0]['groupId'] = '';
-            $groups[0]['groupName'] = '';
+            $groups = array();
             $customer_groups = GroupCustomer::where('customer_id',$customer_id)->get();
                 foreach($customer_groups as $key => $customer_group){
                     $groups[$key]['groupId'] = $customer_group->group->id;
@@ -54,13 +54,13 @@ class GroupController extends BaseController
 
     public function getGroupOffers(Request $request){
         try{
-            $perPage = 5;
+
             $group_id = $request['groupId'];
             $offers = array();
 
             $seller_group_id = Group::where('id',$group_id)->pluck('seller_id')->first();
             $group_messages = GroupMessage::where('reference_member_id',$seller_group_id)
-                ->paginate($perPage);
+                ->paginate($this->perPage);
 
             foreach ($group_messages as $key => $group_message){
                 $offers[$key]['offerId'] = $group_message->offer->id;
@@ -74,7 +74,7 @@ class GroupController extends BaseController
                 'records' => $offers,
                 'pagination' => [
                     'page' => $group_messages->currentPage(),
-                    'perPage' => $perPage,
+                    'perPage' => $this->perPage,
                     'pageCount' => $group_messages->count(),
                     'totalCount' => $group_messages->total(),
                 ],
@@ -92,7 +92,7 @@ class GroupController extends BaseController
 
     public function leaveGroup(Request $request){
         try{
-            $user_id = $this->user->id;
+            $user_id = Auth::user()->id;
             $group_id = $request['groupId'];
 
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();

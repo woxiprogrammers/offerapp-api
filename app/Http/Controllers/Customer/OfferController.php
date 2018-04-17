@@ -67,7 +67,7 @@ class OfferController extends BaseController
         }catch(\Exception $e){
 
             $data = [
-                'action' => 'Get Customer Wish List Offers',
+                'action' => 'Get Customer Offers Listing',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
