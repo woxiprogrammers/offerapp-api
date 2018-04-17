@@ -31,21 +31,20 @@ $app->group(['prefix' => 'customer'], function () use($app){
         $app->post('offers',array('uses' => 'Customer\GroupController@getGroupOffers'));
         $app->post('remove',array('uses' => 'Customer\GroupController@leaveGroup'));
     });
-    $app->group(['prefix' => 'wishlist'], function () use($app){
 
-        $app->post('offers',array('uses' => 'Customer\WishListController@getWishListOffers'));
-        $app->post('remove',array('uses' => 'Customer\WishListController@removeWishList'));
-        $app->post('add',array('uses' => 'Customer\WishListController@addWishList'));
-    });
-    $app->group(['prefix' => 'interested'], function () use($app){
-        $app->group(['prefix' => 'offer'], function () use($app){
-            $app->post('list',array('uses' => 'Customer\InterestedOfferController@getInterestedOffers'));
-            $app->post('add',array('uses' => 'Customer\InterestedOfferController@setInterestedOffers'));
-            $app->post('detail',array('uses' => 'Customer\OfferDetailController@getInterestedOfferDetail'));
-            $app->post('images',array('uses' => 'Customer\OfferDetailController@getOfferImages'));
+    $app->group(['prefix' => 'offer'], function () use($app){
+        $app->group(['prefix' => 'wishlist'], function () use($app){
+            $app->post('listing',array('uses' => 'Customer\OfferController@offerListing'));
+            $app->post('add',array('uses' => 'Customer\OfferController@addToWishlist'));
+            $app->post('remove',array('uses' => 'Customer\OfferController@removeFromWishlist'));
+        });
+        $app->group(['prefix' => 'interested'], function () use($app){
+            $app->post('listing',array('uses' => 'Customer\OfferController@offerListing'));
+            $app->post('detail',array('uses' => 'Customer\OfferController@getInterestedOfferDetail'));
+            $app->post('add',array('uses' => 'Customer\OfferController@addToInterest'));
+
         });
     });
-
 });
 
 $app->group(['prefix' => 'seller'], function () use($app){

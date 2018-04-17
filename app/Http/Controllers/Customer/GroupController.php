@@ -56,11 +56,8 @@ class GroupController extends BaseController
         try{
             $perPage = 5;
             $group_id = $request['groupId'];
-            $offers[0]['offerId'] = '';
-            $offers[0]['offerName'] = '';
-            $offers[0]['offerPic'] = '';
-            $offers[0]['sellerInfo'] = '';
-            $offers[0]['offerExpiry']= '';
+            $offers = array();
+
             $seller_group_id = Group::where('id',$group_id)->pluck('seller_id')->first();
             $group_messages = GroupMessage::where('reference_member_id',$seller_group_id)
                 ->paginate($perPage);
@@ -68,7 +65,7 @@ class GroupController extends BaseController
             foreach ($group_messages as $key => $group_message){
                 $offers[$key]['offerId'] = $group_message->offer->id;
                 $offers[$key]['offerName'] = $group_message->offer->offerType->name;
-                $offers[$key]['offerPic'] = env('IMAGE_PATH').$group_message->offer->offerImages->first()->name;
+                $offers[$key]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$group_message->offer->offerImages->first()->name;
                 $offers[$key]['sellerInfo'] = $group_message->offer->sellerAddress->seller->user->first_name.' '.$group_message->offer->sellerAddress->seller->user->last_name;
                 $valid_to = $group_message->offer->valid_to;
                 $offers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
@@ -95,15 +92,15 @@ class GroupController extends BaseController
 
     public function leaveGroup(Request $request){
         try{
-            $user_id = $request['userId'];
+            $user_id = $this->user->id;
             $group_id = $request['groupId'];
 
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
-            if(
-                GroupCustomer::where('customer_id',$customer_id)
-                            ->where('group_id',$group_id)
-                            ->delete()
-            ){
+
+            $group_customer = GroupCustomer::where('customer_id',$customer_id)
+                ->where('group_id',$group_id)
+                ->delete();
+            if($group_customer > 0 ){
                 $data = [
                     'removed' => true
                 ];
