@@ -23,6 +23,7 @@ class CustomerController extends BaseController
             $this->user = Auth::user();
         }
     }
+
     public function getLocation(Request $request){
         try{
             $coordinates = $request['coords'];
@@ -63,6 +64,7 @@ class CustomerController extends BaseController
 
     public function setLocation(Request $request){
         try{
+
             $address = $request['locationName'];
 
             $location = Mapper::location($address);

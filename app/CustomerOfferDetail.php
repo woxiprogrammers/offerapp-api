@@ -13,4 +13,16 @@ class CustomerOfferDetail extends Model
     public function customer(){
         return $this->belongsTo('App\Customer','customer_id');
     }
+
+    public function offer(){
+        return $this->belongsTo('App\Offer','offer_id');
+    }
+
+    public function offerStatus(){
+        return $this->belongsTo('App\OfferStatus','offer_status_id');
+    }
+
+    public function reachTime(){
+        return $this->belongsTo('App\ReachTime','reach_time_id');
+    }
 }

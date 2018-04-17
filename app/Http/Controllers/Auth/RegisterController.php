@@ -8,6 +8,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Customer;
+use App\Role;
+use App\Seller;
 use App\User;
 
 use Illuminate\Http\Request;
@@ -43,10 +46,10 @@ class RegisterController extends BaseController
                 'password' => 'required|string|min:6',
                 'mobile_no' => 'required|regex:/[0-9]/|unique:users,mobile_no,',
             ]);*/
+            $role = $request['role'];
+            $role_id = Role::where('slug', $role)->pluck('id')->first();
 
-            $role_id = $request['role'];
-
-            User::create([
+            $user = User::create([
                 'role_id' => $role_id,
                 'first_name' => $input['first_name'],
                 'last_name' => $input['last_name'],
@@ -55,6 +58,16 @@ class RegisterController extends BaseController
                 'profile_picture' => 'avatar9.jpg',
                 'password' => Hash::make($input['password']),
             ]);
+
+            if (role == 'customer'){
+                Customer::create([
+                    'user_id' => $user->id,
+                ]);
+            }elseif (role == 'seller'){
+                Seller::create([
+                    'user_id' => $user->id,
+                ]);
+            }
 
             $credentials = $request->only('mobile_no','password');
             if($token = JWTAuth::attempt($credentials)){

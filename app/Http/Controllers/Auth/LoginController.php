@@ -52,6 +52,12 @@ class LoginController extends BaseController
         $response = [
             'message' => $message,
             'token' => $token,
+            'firstName' => $user->first_name,
+            'lastName' => $user->last_name,
+            'email' => $user->email,
+            'mobileNo' => $user->mobile_no,
+            'profilePic' => env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$user->profile_picture,
+
         ];
         return response()->json($response,$status);
     }
