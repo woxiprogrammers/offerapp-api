@@ -19,7 +19,7 @@ class CategoryController extends BaseController
 {
     public function __construct()
     {
-        $this->middleware('jwt.auth', ['except' => ['getSubCategory', 'getMainCategory']]);
+        $this->middleware('jwt.auth');
         if (!Auth::guest()) {
             $this->user = Auth::user();
         }
@@ -90,6 +90,14 @@ class CategoryController extends BaseController
             'data' => $data
         ];
         return response()->json($response, $status);
+    }
+
+    public function image(Request $request){
+        try{
+            dd($request->file('image')->getClientOriginalExtension());
+        }catch (\Exception $e){
+            dd($e->getMessage());
+        }
     }
 
 }

@@ -66,5 +66,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
         $app->post('sub',array('uses' => 'Seller\CategoryController@getSubCategory'));
 
     });
+    $app->post('save-image',array('uses' => 'ImageController@image'));
+
 
 

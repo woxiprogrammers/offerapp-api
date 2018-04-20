@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Category;
+use App\OfferImage;
 use App\OfferStatus;
 use App\OfferType;
 use App\Seller;
@@ -16,6 +17,7 @@ use App\Offer;
 use App\SellerAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
@@ -24,7 +26,7 @@ class OfferController extends BaseController
 {
     public function __construct()
     {
-        $this->middleware('jwt.auth', ['except' => ['getOfferListing','getOfferType','createOffer']]);
+        $this->middleware('jwt.auth');
         if (!Auth::guest()) {
             $this->user = Auth::user();
         }
@@ -109,7 +111,7 @@ class OfferController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Seller Offer Listing',
+                'action' => 'Seller Offer Detail',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
@@ -157,42 +159,50 @@ class OfferController extends BaseController
     }
 
     public function createOffer(Request $request){
-        try{
-
-            /*offer_type_id=1
-            offer_type_name=buy 1 get 1 free
-            category_id=1
-            category_name=Fashion
-            start_date=
-            end_date=
-            offer_description= offer description
-            photos=*/
-
-            $user_id = Auth::user()->id;
+        try {
+            $user = Auth::user();
             $input = $request->all();
-            $seller_address_id = SellerAddress::where('seller_id',$user_id)->pluck('id')->first();
-            $offer_status_id = OfferStatus::where('slug' ,'draft')->pluck('id')->first();
-            return $offer_status_id;
+            $seller_id = Seller::where('user_id', $user['id'])->pluck('id')->first();
+            $seller_address_id = SellerAddress::where('seller_id', $seller_id)->pluck('id')->first();
+            $offer_status_id = OfferStatus::where('slug', 'pending')->pluck('id')->first();
 
-            Offer::create([
+            $offer = Offer::create([
                 'category_id' => $input['category_id'],
                 'offer_type_id' => $input['offer_type_id'],
                 'seller_address_id' => $seller_address_id,
-                'offer_status_id' => 1,
-                'description' => $input['description'],
-                'valid_from' => $input['valid_from'],
-                'valid_to' => $input['valid_to']
+                'offer_status_id' => $offer_status_id,
+                'description' => $input['offer_description'],
+                'valid_from' => $input['start_date'],
+                'valid_to' => $input['end_date']
 
             ]);
+            if ($request->has('images')) {
+                $user = Auth::user();
+                $sha1UserId = sha1($user['id']);
+                $sha1OfferId = sha1($offer['id']);
+                foreach ($input['images'] as $key1 => $imageName) {
+                    $tempUploadFile = env('WEB_PUBLIC_PATH') . env('OFFER_TEMP_IMAGE_UPLOAD'). DIRECTORY_SEPARATOR . $sha1UserId . DIRECTORY_SEPARATOR . $imageName;
+                    if (File::exists($tempUploadFile)) {
+                        $imageUploadNewPath = env('WEB_PUBLIC_PATH') . env('OFFER_IMAGE_UPLOAD') . $sha1OfferId;
+                        if (!file_exists($imageUploadNewPath)) {
+                            File::makeDirectory($imageUploadNewPath, $mode = 0777, true, true);
+                        }
+                        $imageUploadNewPath .= DIRECTORY_SEPARATOR . $imageName;
+                        File::move($tempUploadFile, $imageUploadNewPath);
+                        OfferImage::create(['name' => $imageName, 'offer_id' => $offer->id]);
+                    }
+                }
+            }
             $message = "Success";
             $status = 200;
-
-        } catch (\Exception $e) {
+        }catch (\Exception $e) {
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Add To Group',
+                'action' => 'Create Seller Offer',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
+
             ];
             Log::critical(json_encode($data));
             abort(500);

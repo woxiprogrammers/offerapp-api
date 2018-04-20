@@ -23,7 +23,7 @@ class GroupController extends BaseController
 
     public function __construct()
     {
-        $this->middleware('jwt.auth', ['except' => ['getGroupList','addToGroup']]);
+        $this->middleware('jwt.auth');
         if (!Auth::guest()) {
             $this->user = Auth::user();
         }
@@ -64,28 +64,23 @@ class GroupController extends BaseController
 
     public function addToGroup(Request $request){
         try{
+            $user = Auth::user();
             $group_id = $request['group_id'];
-            $group_name= $request['group_name'];
             $mobile_no = $request ['mobile_no'];
-
             $user_id = User::where('mobile_no',$mobile_no)->pluck('id')->first();
 
             $customer_id = Customer::where('user_id',$user_id)->pluck('id')->first();
-            $check_group_id = Group::where('name', $group_name)->pluck('id')->first();
 
             $check_customer_group = GroupCustomer::where('customer_id', $customer_id)->where('group_id',$group_id)->pluck('id')->first();
 
 
-            if($group_id == $check_group_id && $check_customer_group =="") {
+            if($check_customer_group =="") {
                 GroupCustomer::create([
                     'group_id' => $group_id,
                     'customer_id' => $customer_id
                 ]);
                 $message = 'Success';
                 $status = 200;
-            }else if($group_id != $check_group_id){
-                $message = 'Group Name Not Found';
-                $status = 404;
             }else if($check_customer_group !=""){
                 $message = 'User Already Exist';
                 $status = 412;
@@ -96,6 +91,8 @@ class GroupController extends BaseController
             $data = [
                 'action' => 'Add To Group',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
+
             ];
             Log::critical(json_encode($data));
             abort(500);
