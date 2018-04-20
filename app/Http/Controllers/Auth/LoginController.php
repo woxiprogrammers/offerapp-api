@@ -1,7 +1,7 @@
 <?php
     /**
      * Created by PhpStorm.
-     * User: harsha
+     * User: sonali
      * Date: 22/3/18
      * Time: 4:28 PM
      */
@@ -28,10 +28,15 @@ class LoginController extends BaseController
 
     public function login(Request $request){
         try{
-
             $credentials = $request->only('mobile_no','password');
+            $userData =  array();
             if($token = JWTAuth::attempt($credentials)){
                 $user = Auth::user();
+                $userData['firstName'] = $user['first_name'];
+                $userData['lastName'] = $user['last_name'];
+                $userData['email'] = $user['email'];
+                $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
+                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
                 $message = "Logged in successfully!!";
                 $status = 200;
                 $user_data = [
@@ -57,6 +62,7 @@ class LoginController extends BaseController
                     'token' => $token,
                 ];
             }
+
         }catch (\Exception $e){
             $token = '';
             $message = "Fail";
@@ -71,8 +77,8 @@ class LoginController extends BaseController
                 'token' => $token,
                 'data' => $data
             ];
-            return response()->json($response,$status);
         }
+
         return response()->json($response,$status);
 
 
