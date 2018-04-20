@@ -125,11 +125,10 @@ class OfferController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function getOfferType()
-    {
+    public function getOfferType(Request $request){
         try {
             $offerTypes = OfferType::all();
-            $iterator=0;
+            $iterator = 0;
             $offerTypeList = array();
             foreach ($offerTypes as $key => $offerType) {
                 $offerTypeList[$iterator]['offer_type_id'] = $offerType['id'];
@@ -177,7 +176,6 @@ class OfferController extends BaseController
 
             ]);
             if ($request->has('images')) {
-                $user = Auth::user();
                 $sha1UserId = sha1($user['id']);
                 $sha1OfferId = sha1($offer['id']);
                 foreach ($input['images'] as $key1 => $imageName) {

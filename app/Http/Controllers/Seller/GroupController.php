@@ -64,26 +64,24 @@ class GroupController extends BaseController
 
     public function addToGroup(Request $request){
         try{
-            $user = Auth::user();
             $group_id = $request['group_id'];
             $mobile_no = $request ['mobile_no'];
             $user_id = User::where('mobile_no',$mobile_no)->pluck('id')->first();
 
             $customer_id = Customer::where('user_id',$user_id)->pluck('id')->first();
 
-            $check_customer_group = GroupCustomer::where('customer_id', $customer_id)->where('group_id',$group_id)->pluck('id')->first();
+            $check_customer_group_count = GroupCustomer::where('customer_id', $customer_id)->where('group_id',$group_id)->pluck('id')->count();
 
-
-            if($check_customer_group =="") {
+            if($check_customer_group_count > 0) {
+                $message = 'User Already Exist';
+                $status = 412;
+            }else{
                 GroupCustomer::create([
                     'group_id' => $group_id,
                     'customer_id' => $customer_id
                 ]);
                 $message = 'Success';
                 $status = 200;
-            }else if($check_customer_group !=""){
-                $message = 'User Already Exist';
-                $status = 412;
             }
         } catch (\Exception $e) {
             $message = "Fail";

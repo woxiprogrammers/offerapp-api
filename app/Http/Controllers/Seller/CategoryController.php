@@ -28,7 +28,7 @@ class CategoryController extends BaseController
     public function getMainCategory()
     {
         try {
-            $main_category = Category::all()->where('category_id',null);
+            $main_category = Category::whereNull('category_id')->get();
             $iterator = 0;
             $categoryList = array();
             foreach ($main_category as $key => $category) {
@@ -44,7 +44,7 @@ class CategoryController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Category Listing',
+                'action' => 'Get main Category Listing',
                 'exception' => $e->getMessage(),
             ];
             Log::critical(json_encode($data));
@@ -61,7 +61,7 @@ class CategoryController extends BaseController
     public function getSubCategory(Request $request){
         try{
             $main_category_id = $request['category_id'];
-            $sub_category = Category::all()->where('category_id', $main_category_id);
+            $sub_category = Category::where('category_id', $main_category_id)->get();
             $iterator = 0;
             $categoryList = array();
             foreach ($sub_category as $key => $category) {
@@ -77,7 +77,7 @@ class CategoryController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Category Listing',
+                'action' => 'Get Sub Category Listing',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
@@ -91,13 +91,4 @@ class CategoryController extends BaseController
         ];
         return response()->json($response, $status);
     }
-
-    public function image(Request $request){
-        try{
-            dd($request->file('image')->getClientOriginalExtension());
-        }catch (\Exception $e){
-            dd($e->getMessage());
-        }
-    }
-
 }
