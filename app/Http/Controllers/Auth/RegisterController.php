@@ -39,35 +39,24 @@ class RegisterController extends BaseController
 
             $input = $request->all();
 
-            /*$this->validate($request, [
+           /* $this->validate($request, [
                 'first_name' => 'string|max:255',
                 'last_name' => 'string|max:255',
                 'email' => '    string|email|max:255|unique:users,email,',
                 'password' => 'required|string|min:6',
                 'mobile_no' => 'required|regex:/[0-9]/|unique:users,mobile_no,',
             ]);*/
-            $role = $request['role'];
-            $role_id = Role::where('slug', $role)->pluck('id')->first();
-
+            $role_slug = $request['roleSlug'];
+            $role_id = Role::where('slug', $role_slug)->pluck('id')->first();
             $user = User::create([
                 'role_id' => $role_id,
                 'first_name' => $input['first_name'],
                 'last_name' => $input['last_name'],
                 'mobile_no' => $input['mobile_no'],
                 'email' => $input['email'],
-                'profile_picture' => 'avatar9.jpg',
+                'profile_picture' => '',
                 'password' => Hash::make($input['password']),
             ]);
-
-            if (role == 'customer'){
-                Customer::create([
-                    'user_id' => $user->id,
-                ]);
-            }elseif (role == 'seller'){
-                Seller::create([
-                    'user_id' => $user->id,
-                ]);
-            }
 
             $credentials = $request->only('mobile_no','password');
             if($token = JWTAuth::attempt($credentials)){
@@ -80,6 +69,17 @@ class RegisterController extends BaseController
                 $status = 401;
             }
 
+            if($role_slug == 'customer'){
+                Customer::create([
+                    'user_id' => $user->id
+                ]);
+            }
+            elseif($role_slug == 'seller'){
+                Seller::create([
+                    'user_id' => $user->id
+                ]);
+            }
+
         }
         catch (\Exception $e){
             if ($e instanceof ValidationException){
@@ -87,13 +87,21 @@ class RegisterController extends BaseController
 
                 return response()->json($errors->original);
             }
+            $token = '';
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Register API',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
 
-            Log::critical(json_encode($data));
+            $response = [
+                'message' => $message,
+                'token' => $token,
+                'data' => $data
+            ];
+            return response()->json($response,$status);
         }
 
         $response = [

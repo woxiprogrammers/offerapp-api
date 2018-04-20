@@ -28,15 +28,34 @@ class LoginController extends BaseController
 
     public function login(Request $request){
         try{
+
             $credentials = $request->only('mobile_no','password');
             if($token = JWTAuth::attempt($credentials)){
                 $user = Auth::user();
                 $message = "Logged in successfully!!";
                 $status = 200;
+                $user_data = [
+                    'firstName' => $user->first_name,
+                    'lastName' => $user->last_name,
+                    'email' => $user->email,
+                    'mobileNo' => $user->mobile_no,
+                    'profilePic' => env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$user->profile_picture,
+                ];
+                $response = [
+                    'message' => $message,
+                    'token' => $token,
+                    'userData' => $user_data
+                ];
             }else{
+
                 $token = '';
                 $message = "Invalid credentials";
                 $status = 401;
+
+                $response = [
+                    'message' => $message,
+                    'token' => $token,
+                ];
             }
         }catch (\Exception $e){
             $token = '';
@@ -47,19 +66,16 @@ class LoginController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
-            Log::critical(json_encode($data));
+            $response = [
+                'message' => $message,
+                'token' => $token,
+                'data' => $data
+            ];
+            return response()->json($response,$status);
         }
-        $response = [
-            'message' => $message,
-            'token' => $token,
-            'firstName' => $user->first_name,
-            'lastName' => $user->last_name,
-            'email' => $user->email,
-            'mobileNo' => $user->mobile_no,
-            'profilePic' => env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$user->profile_picture,
-
-        ];
         return response()->json($response,$status);
+
+
     }
 
 }

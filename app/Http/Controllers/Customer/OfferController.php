@@ -1,25 +1,32 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: sonali
- * Date: 28/3/18
+ * User: arvind
+ * Date: 18/4/18
  * Time: 5:58 PM
  */
 
 namespace App\Http\Controllers\Customer;
 
+use App\Category;
 use App\Customer;
 use App\CustomerOfferDetail;
+use App\Http\Controllers\CustomTraits\OfferTrait;
 use App\OfferStatus;
 use App\Offer;
 use App\OfferImage;
+use App\OfferType;
 use App\ReachTime;
+use App\SellerAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Input;
+use Ixudra\Curl\Facades\Curl;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class OfferController extends BaseController
 {
+    use OfferTrait;
     protected $perPage = 5;
 
     public function __construct(){
@@ -250,6 +257,118 @@ class OfferController extends BaseController
         return response()->json($data);
     }
 
+    public function nearByOffer(Request $request){
+
+        try{
+            $currentPage = Input::get('page', 1)-1;
+            $near_by_zipcode = $request['zipcode'];
+            $offertype_id = OfferType::where('slug',$request['offerTypeSlug'])->pluck('id')->first();
+            $category_id = Category::where('slug',$request['categorySlug'])->pluck('id')->first();
+
+            $near_by_seller_addresses = SellerAddress::where('zipcode', $near_by_zipcode)->pluck('id')->all();
+            $near_by_offer = array();
+            $iterator = 0;
+
+            foreach ($near_by_seller_addresses as  $near_by_seller_address){
+                $offers = Offer::where('seller_address_id',$near_by_seller_address)
+                                ->where('offer_type_id', $offertype_id)
+                                ->where('category_id', $category_id)
+                                ->get();
+                foreach ($offers  as $offer){
+                    $near_by_offer[$iterator]['offerId'] = $offer->id;
+                    $near_by_offer[$iterator]['offerName'] = $offer->offerType->name;
+                    $near_by_offer[$iterator]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$offer->offerImages->first()->name;
+                    $near_by_offer[$iterator]['sellerInfo'] = $offer->sellerAddress->seller->user->first_name.' '.$offer->sellerAddress->seller->user->last_name;
+                    $valid_to = $offer->valid_to;
+                    $near_by_offer[$iterator]['offerExpiry']= date('d F, Y',strtotime($valid_to));
+                    $iterator++;
+                }
+            }
+            $pagedData = array_slice($near_by_offer, $currentPage * $this->perPage, $this->perPage);
+            $data = [
+                'records' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage +1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($near_by_offer),
+                ],
+            ];
+
+
+        }catch (\Exception $e){
+            $data =[
+                'parameter' => $request,
+                'action' => 'nearByOffer',
+                'errorMessage' => $e->getMessage()
+            ];
+        }
+        return response()->json($data);
+
+    }
+
+    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2)
+    {
+        $point1 = [
+            "lat" => 18.5482895,
+            "lng" => 73.7935478
+        ];
+
+        $point2 = [
+            "lat" => 18.5250051,
+            "lng" => 73.7004978
+        ];
+        // Calculate the distance in degrees using Hervasine formula
+        $degrees = $this->calcDistance($origin, $destination);
+        // Convert the distance in degrees to the chosen unit (kilometres, miles or nautical miles)
+        switch ($unit) {
+            case 'km':
+                // 1 degree = 111.13384 km, based on the average diameter of the Earth (12,735 km)
+                $distance = $degrees * 111.13384;
+                break;
+            case 'mi':
+                // 1 degree = 69.05482 miles, based on the average diameter of the Earth (7,913.1 miles)
+                $distance = $degrees * 69.05482;
+                break;
+            case 'nmi':
+                // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
+                $distance = $degrees * 59.97662;
+        }
+        return $distance;
+    }
+
+    private function calcDistance($point1, $point2)
+    {
+        return rad2deg(acos((sin(deg2rad($point1['latitude'])) *
+                sin(deg2rad($point2['latitude']))) +
+            (cos(deg2rad($point1['latitude'])) *
+                cos(deg2rad($point2['latitude'])) *
+                cos(deg2rad($point1['longitude'] - $point2['longitude'])))));
+    }
+
+    public function getDistanceByGoogleApi(Request $request){
+        try{
+
+            $origin = $request['origin'];
+            $destination = $request['destination'];
+
+            $origin = implode(",", [$origin['latitude'], $origin['longitude']]);
+            $destination = implode(",", [$destination['latitude'], $destination['longitude']]);
+            $apiKey = urlencode(env('GOOGLE_API_KEY'));
+
+            $data = Curl::to('https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins='.$origin.'&destinations='.$destination.'&key='.$apiKey)
+                        ->post();
+
+        }catch(\Exception $e){
+
+            $data = [
+                'action' => 'Get Distance Using Google Api',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+        }
+        return $data;
+    }
 
 
 

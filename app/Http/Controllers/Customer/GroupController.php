@@ -1,8 +1,8 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: sonali
- * Date: 28/3/18
+ * User: arvind
+ * Date: 16/4/18
  * Time: 5:58 PM
  */
 
@@ -31,7 +31,7 @@ class GroupController extends BaseController
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
             $groups = array();
             $customer_groups = GroupCustomer::where('customer_id',$customer_id)->get();
-                foreach($customer_groups as $key => $customer_group){
+            foreach($customer_groups as $key => $customer_group){
                     $groups[$key]['groupId'] = $customer_group->group->id;
                     $groups[$key]['groupName'] = $customer_group->group->name;
                 }
