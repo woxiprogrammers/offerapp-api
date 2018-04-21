@@ -84,8 +84,7 @@ class OtpVerificationController extends BaseController
             if($otp == $userotp) {
                 $message = "Valid Otp";
                 $status = 200;
-            }
-            else{
+            }else{
                 $message = "Invalid Otp...Please Enter Correct Otp";
                 $status = 500;
             }

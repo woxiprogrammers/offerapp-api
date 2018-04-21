@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: root
+ * User: sonali
  * Date: 22/3/18
  * Time: 10:32 AM
  */
@@ -33,78 +33,59 @@ class RegisterController extends BaseController
         }
     }
 
-    public function register(Request $request)
-    {
+    public function register(Request $request){
         try{
-
-            $input = $request->all();
-
-            /*$this->validate($request, [
+           /* $this->validate($request, [
                 'first_name' => 'string|max:255',
                 'last_name' => 'string|max:255',
                 'email' => '    string|email|max:255|unique:users,email,',
                 'password' => 'required|string|min:6',
                 'mobile_no' => 'required|regex:/[0-9]/|unique:users,mobile_no,',
             ]);*/
-            $role = $request['role'];
-            $role_id = Role::where('slug', $role)->pluck('id')->first();
 
-            $user = User::create([
-                'role_id' => $role_id,
-                'first_name' => $input['first_name'],
-                'last_name' => $input['last_name'],
-                'mobile_no' => $input['mobile_no'],
-                'email' => $input['email'],
-                'profile_picture' => 'avatar9.jpg',
-                'password' => Hash::make($input['password']),
-            ]);
-
-            if (role == 'customer'){
-                Customer::create([
-                    'user_id' => $user->id,
-                ]);
-            }elseif (role == 'seller'){
-                Seller::create([
-                    'user_id' => $user->id,
-                ]);
-            }
-
-            $credentials = $request->only('mobile_no','password');
-            if($token = JWTAuth::attempt($credentials)){
-                $user = Auth::user();
-                $message = "Register in successfully!!";
-                $status = 200;
+            $user = $this->createUser($request->all());
+            if($user != null){
+                $userData = array();
+                $credentials = $request->only('mobile_no','password');
+                if($token = JWTAuth::attempt($credentials)){
+                    $user = Auth::user();
+                    $userData['firstName'] = $user['first_name'];
+                    $userData['lastName'] = $user['last_name'];
+                    $userData['email'] = $user['email'];
+                    $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
+                    $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
+                    $message = "Register in successfully!!";
+                    $status = 200;
+                }else{
+                    $message = "Invalid credentials";
+                    $status = 401;
+                }
             }else{
-                $token = '';
-                $message = "Invalid credentials";
+                $message = "Unable to register";
                 $status = 401;
             }
-
         }
         catch (\Exception $e){
-            if ($e instanceof ValidationException){
-                $errors = $e->response;
-
-                return response()->json($errors->original);
-            }
+            $message = "Fail";
+            $status = 500;
+            $userData =  array();
+            $token = '';
             $data = [
                 'action' => 'Register API',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
-
             Log::critical(json_encode($data));
         }
-
         $response = [
             'message' => $message,
             'token' => $token,
+            'userData' => $userData
         ];
         return response()->json($response, $status);
-
     }
 
-        public function getOtp(Request $request){
+    public function getOtp(Request $request){
             $apiKey = urlencode(env('SMS_KEY'));
 
             // Message details
@@ -131,4 +112,38 @@ class RegisterController extends BaseController
 
         }
 
+    protected function createUser(array $input)
+    {
+        try{
+            $role_slug = $input['roleSlug'];
+            $role_id = Role::where('slug', $role_slug)->pluck('id')->first();
+            $user = User::create([
+                'role_id' => $role_id,
+                'first_name' => $input['first_name'],
+                'last_name' => $input['last_name'],
+                'mobile_no' => $input['mobile_no'],
+                'email' => $input['email'],
+                'profile_picture' => '',
+                'password' => Hash::make($input['password']),
+            ]);
+            if($role_slug == 'seller'){
+                Seller::create([
+                    'user_id' => $user->id
+                ]);
+            }else{
+                Customer::create([
+                    'user_id' => $user->id
+                ]);
+            }
+        }catch(\Exception $e){
+            $user = array();
+            $data = [
+                'action' => 'Create User, Seller, Customer',
+                'exception' => $e->getMessage(),
+                'params' => $input
+            ];
+            Log::critical(json_encode($data));
+        }
+        return $user;
+    }
 }

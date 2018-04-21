@@ -1,7 +1,7 @@
 <?php
     /**
      * Created by PhpStorm.
-     * User: harsha
+     * User: sonali
      * Date: 22/3/18
      * Time: 4:28 PM
      */
@@ -18,8 +18,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class LoginController extends BaseController
 {
 
-    public function __construct()
-    {
+    public function __construct(){
         $this->middleware('jwt.auth',['except' => ['login']]);
         if(!Auth::guest()) {
             $this->user = Auth::user();
@@ -40,15 +39,15 @@ class LoginController extends BaseController
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{
-                $token = '';
                 $message = "Invalid credentials";
                 $status = 401;
             }
 
         }catch (\Exception $e){
-            $token = '';
             $message = "Fail";
             $status = 500;
+            $userData =  array();
+            $token = '';
             $data = [
                 'action' => 'Login',
                 'exception' => $e->getMessage(),
@@ -60,12 +59,6 @@ class LoginController extends BaseController
             'message' => $message,
             'token' => $token,
             'userData' => $userData
-            /*'firstName' => $user->first_name,
-            'lastName' => $user->last_name,
-            'email' => $user->email,
-            'mobileNo' => $user->mobile_no,
-            'profilePic'     => env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$user->profile_picture,*/
-
         ];
         return response()->json($response,$status);
     }
