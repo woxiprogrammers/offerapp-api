@@ -14,6 +14,7 @@ use App\SellerAddress;
 use Cornford\Googlmapper\Facades\MapperFacade as Mapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 
@@ -27,9 +28,10 @@ class SellerController extends BaseController
     }
     public function addSellerAddress(Request $request){
         try{
-
+            $message = "Success";
+            $status = 200;
             $search_address = $request['shopName'].' '.$request['address'];
-            $detail_address = $this->SellerDetailAddress($search_address);
+            $detail_address = $this->sellerDetailAddress($search_address);
 
             $seller_id = Seller::where('user_id', Auth::user()->id)->pluck('id')->first();
             $seller_address = SellerAddress::where('seller_id', $seller_id)->first();
@@ -60,24 +62,30 @@ class SellerController extends BaseController
             }
 
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data =[
-                'parameter' => $request,
                 'action' => 'Add Seller Address Detail',
+                'exception' => $e->getMessage(),
+                'params' => $request->all(),
                 'sellerAddressAdded' => false,
-                'errorMessage' => $e->getMessage()
             ];
             Log::critical(json_encode($data));
-
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
 
     }
 
     public function updateSellerAddress(Request $request){
         try{
-
+            $message = "Success";
+            $status = 200;
             $search_address = $request['shopName'].' '.$request['address'];
-            $detail_address = $this->SellerDetailAddress($search_address);
+            $detail_address = $this->sellerDetailAddress($search_address);
 
             $seller_id = Seller::where('user_id', Auth::user()->id)->pluck('id')->first();
             $seller_address = SellerAddress::where('seller_id', $seller_id)->first();
@@ -105,20 +113,29 @@ class SellerController extends BaseController
             }
 
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data =[
-                'parameter' => $request,
                 'action' => 'Add Seller Address Detail',
+                'exception' => $e->getMessage(),
+                'params' => $request->all(),
                 'sellerAddressAdded' => false,
-                'errorMessage' => $e->getMessage()
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+
 
     }
 
-    public function SellerDetailAddress($search_address){
+    public function sellerDetailAddress($search_address){
         try{
+            $message = "Success";
+            $status = 200;
             $location = Mapper::location($search_address);
             $address = '';
             $city = '';
@@ -148,20 +165,16 @@ class SellerController extends BaseController
             ];
 
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data =[
-                'parameter' => $search_address,
                 'action' => ' Seller Detail Address ',
-                'errorMessage' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'params' => $search_address
             ];
             Log::critical(json_encode($data));
 
         }
         return $data;
-
     }
-
-
-
-
-
 }

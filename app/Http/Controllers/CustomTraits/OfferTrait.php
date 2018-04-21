@@ -26,59 +26,84 @@ trait OfferTrait{
 
     public function getOfferType(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
             $offerTypes = OfferType::select('id', 'name','slug')->get();
-            $data = [
-                'offerTypes' => $offerTypes
-            ];
+            $data['offerTypes'] = $offerTypes;
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get OfferType',
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
 
     }
 
     public function getFloor(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
             $floors = Floor::select('id', 'name','slug')->get();
-            $data = [
-                'floors' => $floors
-            ];
-
+            $data['floors'] = $floors;
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Floor',
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
 
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function getReachInTime(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
             $reach_in_time = ReachTime::select('id', 'name','slug')->get();
-            $data = [
-                'ReachInTime' => $reach_in_time
-            ];
+            $data['reachInTime'] = $reach_in_time;
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Reach In Time',
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function getCategory(Request $request){
         try{
-            $categories = Category::where('category_id',NULL)
-                                ->select('id', 'name','slug')->get();
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $categories = Category::whereNull('category_id')->select('id', 'name','slug')->get();
             foreach ($categories as $key => $category){
                 if (isset($category->id)){
                     $sub_category = Category::whereNotNull('category_id')
@@ -92,18 +117,21 @@ trait OfferTrait{
                 }
 
             }
-            $data =[
-                'Categories' => $categories
-            ];
+            $data['categories'] = $categories;
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data = [
-                'action' => 'Get Offer Categories',
-                'exception' => $e->getMessage()
+                'action' => 'Get Offer Categories-subcategories',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
-    
-
 }

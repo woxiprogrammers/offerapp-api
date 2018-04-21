@@ -21,6 +21,7 @@ use App\SellerAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Log;
 use Ixudra\Curl\Facades\Curl;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
@@ -38,21 +39,27 @@ class OfferController extends BaseController
 
     public function offerListing(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
             $offer_status = $request['offerStatus'];
-            $user_id = Auth::user()->id;
+            $user = Auth::user();
+            $user_id = $user['id'];
             $offers = array();
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
-                if($offer_status == 'wishlist'){
-                    $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
-                                        ->where('is_wishlist',true)
-                                        ->paginate($this->perPage);
-                }elseif ($offer_status == 'interested'){
-                $offer_status = 'interested';
-                $offer_status_id = OfferStatus::where('slug',$offer_status)->pluck('id')->first();
+            if($offer_status == 'wishlist'){
                 $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
-                                    ->where('offer_status_id',$offer_status_id)
+                                    ->where('is_wishlist',true)
                                     ->paginate($this->perPage);
-                }
+            }elseif ($offer_status == 'interested'){
+            $offer_status = 'interested';
+            $offer_status_id = OfferStatus::where('slug',$offer_status)->pluck('id')->first();
+            $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
+                                ->where('offer_status_id',$offer_status_id)
+                                ->paginate($this->perPage);
+            }else{
+                $customer_offers = array();
+            }
             foreach ($customer_offers as $key => $customer_offer){
                 $offers[$key]['offerId'] = $customer_offer->offer->id;
                 $offers[$key]['offerName'] = $customer_offer->offer->offerType->name;
@@ -72,23 +79,30 @@ class OfferController extends BaseController
                 ],
             ];
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Customer Offers Listing',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
 
     }
 
     public function getInterestedOfferDetail(Request $request){
         try{
-
-            $user_id = Auth::user()->id;
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $user = Auth::user();
+            $user_id = user['id'];
             $offer_id = $request['offerId'];
 
             $offers = array();
@@ -100,31 +114,31 @@ class OfferController extends BaseController
             $customer_offer = CustomerOfferDetail::where('customer_id',$customer_id)
                 ->where('offer_id',$offer_id)
                 ->first();
-
-            $offers['offerId'] = $customer_offer->offer->id;
-            $offers['offerName'] = $customer_offer->offer->offerType->name;
-            $offers['offerPic'] = env('IMAGE_PATH').$customer_offer->offer->offerImages->first()->name;
-            $offers['sellerInfo'] = $customer_offer->offer->sellerAddress->seller->user->first_name.' '.$customer_offer->offer->sellerAddress->seller->user->last_name;
-            $valid_to = $customer_offer->offer->valid_to;
+            $offer = $customer_offer->offer;
+            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+            $sha1OfferId = sha1($offer['id']);
+            $offers['offerId'] = $offer->id;
+            $offers['offerName'] = $offer->offerType->name;
+            $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offer->offerImages->first()->name;
+            $seller = $offer->sellerAddress->seller;
+            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+            $valid_to = $offer->valid_to;
             $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
-            $offers['sellerNumber'] = $customer_offer->offer->sellerAddress->landline;
-            $offers['offerLatitude'] = $customer_offer->offer->sellerAddress->latitude;
-            $offers['offerLongitude'] = $customer_offer->offer->sellerAddress->longitude;
-            $offers['offerDescription'] = $customer_offer->offer->description;
+            $offers['sellerNumber'] = $offer->sellerAddress->landline;
+            $offers['offerLatitude'] = $offer->sellerAddress->latitude;
+            $offers['offerLongitude'] = $offer->sellerAddress->longitude;
+            $offers['offerDescription'] = $offer->description;
             $offers['addedToWishList'] = $customer_offer->is_wishlist;
 
             $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
             if($offer_status == 'interested'){
                 $offers['addedToInterested'] = true;
-
             }else{
                 $offers['addedToInterested'] = false;
-
             }
             $images = OfferImage::where('offer_id',$offer_id)->get();
-
             foreach($images as $key => $image){
-                $imageList[$key] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$image->name;
+                $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
                 $loadQueue[$key] = 0;
             }
             $data = [
@@ -133,7 +147,8 @@ class OfferController extends BaseController
                 'loadQueue' => $loadQueue
             ];
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Interested Offer Detail ',
                 'exception' => $e->getMessage(),
@@ -141,12 +156,20 @@ class OfferController extends BaseController
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function addToInterest(Request $request){
         try {
-            $user_id = Auth::user()->id;
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
             $offer_id = $request['offerId'];
             $reach_time = $request['selectedTime'];
             $grab_code = str_random(5);
@@ -159,11 +182,7 @@ class OfferController extends BaseController
             if (isset($customer_offer_detail)) {
                 $customer_offer_detail->offer_status_id = $offer_status_id;
                 $customer_offer_detail->save();
-                $data = [
-                    'AddedToInterested' => true,
-                ];
-            } else {
-
+            }else{
                 $reach_time_id = ReachTime::where('slug', $reach_time)->pluck('id')->first();
                  CustomerOfferDetail::create([
                     'customer_id' => $customer_id,
@@ -174,25 +193,33 @@ class OfferController extends BaseController
                 ]);
             }
             $data = [
-                'AddedToInterested' => true,
+                'addedToInterested' => true,
             ];
 
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Set Interested Offers',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function addToWishlist(Request $request){
         try{
-            $user_id = Auth::user()->id;
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
             $offer_id = $request['offerId'];
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
 
@@ -219,7 +246,8 @@ class OfferController extends BaseController
                 'addedToWishList' => true
             ];
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Add Offer to WishList',
                 'exception' => $e->getMessage(),
@@ -227,11 +255,20 @@ class OfferController extends BaseController
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function removeFromWishlist(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
             $user_id = Auth::user()->id;
             $offer_id = $request['offerId'];
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
@@ -255,7 +292,8 @@ class OfferController extends BaseController
             }
 
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Remove Offer from WishList',
                 'exception' => $e->getMessage(),
@@ -264,12 +302,21 @@ class OfferController extends BaseController
             Log::critical(json_encode($data));
 
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
     }
 
     public function nearByOffer(Request $request){
 
         try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
             $currentPage = Input::get('page', 1)-1;
             $near_by_zipcode = $request['zipcode'];
             $offertype_id = OfferType::where('slug',$request['offerTypeSlug'])->pluck('id')->first();
@@ -307,6 +354,8 @@ class OfferController extends BaseController
 
 
         }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data =[
                 'parameter' => $request,
                 'action' => 'nearByOffer',
@@ -314,7 +363,11 @@ class OfferController extends BaseController
             ];
             Log::critical(json_encode($data));
         }
-        return response()->json($data);
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
 
     }
 
