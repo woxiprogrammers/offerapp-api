@@ -35,6 +35,7 @@ trait OfferTrait{
                 'action' => 'Get OfferType',
                 'exception' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
 
@@ -52,6 +53,8 @@ trait OfferTrait{
                 'action' => 'Get Floor',
                 'exception' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
     }
@@ -67,6 +70,7 @@ trait OfferTrait{
                 'action' => 'Get Reach In Time',
                 'exception' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }
@@ -83,8 +87,9 @@ trait OfferTrait{
                         ->get();
 
                         $categories[$key]['subCategory'] = $sub_category;
+                }else{
+                    $categories[$key] = $category;
                 }
-                $categories[$key] = $category;
 
             }
             $data =[
@@ -95,6 +100,7 @@ trait OfferTrait{
                 'action' => 'Get Offer Categories',
                 'exception' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }

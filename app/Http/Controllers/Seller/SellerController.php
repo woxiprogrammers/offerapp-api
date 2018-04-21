@@ -66,6 +66,8 @@ class SellerController extends BaseController
                 'sellerAddressAdded' => false,
                 'errorMessage' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
 
@@ -109,6 +111,7 @@ class SellerController extends BaseController
                 'sellerAddressAdded' => false,
                 'errorMessage' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
 
@@ -150,6 +153,8 @@ class SellerController extends BaseController
                 'action' => ' Seller Detail Address ',
                 'errorMessage' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
+
         }
         return $data;
 

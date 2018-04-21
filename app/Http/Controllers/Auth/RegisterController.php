@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: root
+ * User: sonali
  * Date: 22/3/18
  * Time: 10:32 AM
  */
@@ -36,9 +36,6 @@ class RegisterController extends BaseController
     public function register(Request $request)
     {
         try{
-
-            $input = $request->all();
-
            /* $this->validate($request, [
                 'first_name' => 'string|max:255',
                 'last_name' => 'string|max:255',
@@ -46,47 +43,41 @@ class RegisterController extends BaseController
                 'password' => 'required|string|min:6',
                 'mobile_no' => 'required|regex:/[0-9]/|unique:users,mobile_no,',
             ]);*/
-            $role_slug = $request['roleSlug'];
-            $role_id = Role::where('slug', $role_slug)->pluck('id')->first();
-            $user = User::create([
-                'role_id' => $role_id,
-                'first_name' => $input['first_name'],
-                'last_name' => $input['last_name'],
-                'mobile_no' => $input['mobile_no'],
-                'email' => $input['email'],
-                'profile_picture' => '',
-                'password' => Hash::make($input['password']),
-            ]);
+
+/*            $user = $this->createUser($request->all());*/
 
             $credentials = $request->only('mobile_no','password');
             if($token = JWTAuth::attempt($credentials)){
                 $user = Auth::user();
+                $userData['firstName'] = $user['first_name'];
+                $userData['lastName'] = $user['last_name'];
+                $userData['email'] = $user['email'];
+                $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
+                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
                 $message = "Register in successfully!!";
                 $status = 200;
+                $user_data = [
+                    'firstName' => $user->first_name,
+                    'lastName' => $user->last_name,
+                    'email' => $user->email,
+                    'mobileNo' => $user->mobile_no,
+                    'profilePic' => env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$user->profile_picture,
+                ];
             }else{
                 $token = '';
+                $user_data = '';
                 $message = "Invalid credentials";
                 $status = 401;
             }
-
-            if($role_slug == 'customer'){
-                Customer::create([
-                    'user_id' => $user->id
-                ]);
-            }
-            elseif($role_slug == 'seller'){
-                Seller::create([
-                    'user_id' => $user->id
-                ]);
-            }
+            $response = [
+                'message' => $message,
+                'token' => $token,
+                'userData' => $user_data
+            ];
 
         }
         catch (\Exception $e){
-            if ($e instanceof ValidationException){
-                $errors = $e->response;
 
-                return response()->json($errors->original);
-            }
             $token = '';
             $message = "Fail";
             $status = 500;
@@ -95,24 +86,18 @@ class RegisterController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
-
+            Log::critical(json_encode($data));
             $response = [
                 'message' => $message,
                 'token' => $token,
                 'data' => $data
             ];
-            return response()->json($response,$status);
         }
-
-        $response = [
-            'message' => $message,
-            'token' => $token,
-        ];
         return response()->json($response, $status);
 
     }
 
-        public function getOtp(Request $request){
+    public function getOtp(Request $request){
             $apiKey = urlencode(env('SMS_KEY'));
 
             // Message details
@@ -138,5 +123,43 @@ class RegisterController extends BaseController
             return $response;
 
         }
+
+    protected function createUser(array $input)
+    {
+        try{
+            $role_slug = $input['roleSlug'];
+            $role_id = Role::where('slug', $role_slug)->pluck('id')->first();
+
+            $user = User::create([
+                'role_id' => $role_id,
+                'first_name' => $input['first_name'],
+                'last_name' => $input['last_name'],
+                'mobile_no' => $input['mobile_no'],
+                'email' => $input['email'],
+                'profile_picture' => '',
+                'password' => Hash::make($input['password']),
+            ]);
+            if($role_slug == 'customer'){
+                Customer::create([
+                    'user_id' => $user->id
+                ]);
+            }elseif($role_slug == 'seller'){
+                Seller::create([
+                    'user_id' => $user->id
+                ]);
+            }
+            return $user;
+        }catch(\Exception $e){
+            $data = [
+                'action' => 'create user',
+                'exception' => $e->getMessage(),
+                'params' => $input
+            ];
+            Log::critical(json_encode($data));
+        }
+
+    }
+
+
 
 }

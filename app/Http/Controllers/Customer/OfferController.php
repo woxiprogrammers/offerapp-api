@@ -78,6 +78,8 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
 
@@ -137,6 +139,7 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }
@@ -181,6 +184,8 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
     }
@@ -220,6 +225,7 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }
@@ -244,6 +250,8 @@ class OfferController extends BaseController
                 $data = [
                     'removed' => false
                 ];
+                Log::critical(json_encode($data));
+
             }
 
         }catch(\Exception $e){
@@ -253,6 +261,8 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
     }
@@ -302,6 +312,7 @@ class OfferController extends BaseController
                 'action' => 'nearByOffer',
                 'errorMessage' => $e->getMessage()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
 
@@ -309,41 +320,58 @@ class OfferController extends BaseController
 
     public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2)
     {
-        $point1 = [
-            "lat" => 18.5482895,
-            "lng" => 73.7935478
-        ];
-
-        $point2 = [
-            "lat" => 18.5250051,
-            "lng" => 73.7004978
-        ];
-        // Calculate the distance in degrees using Hervasine formula
-        $degrees = $this->calcDistance($origin, $destination);
-        // Convert the distance in degrees to the chosen unit (kilometres, miles or nautical miles)
-        switch ($unit) {
-            case 'km':
-                // 1 degree = 111.13384 km, based on the average diameter of the Earth (12,735 km)
-                $distance = $degrees * 111.13384;
-                break;
-            case 'mi':
-                // 1 degree = 69.05482 miles, based on the average diameter of the Earth (7,913.1 miles)
-                $distance = $degrees * 69.05482;
-                break;
-            case 'nmi':
-                // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
-                $distance = $degrees * 59.97662;
+        try{
+            // Calculate the distance in degrees using Hervasine formula
+            $degrees = $this->calcDistance($origin, $destination);
+            // Convert the distance in degrees to the chosen unit (kilometres, miles or nautical miles)
+            switch ($unit) {
+                case 'km':
+                    // 1 degree = 111.13384 km, based on the average diameter of the Earth (12,735 km)
+                    $distance = $degrees * 111.13384;
+                    break;
+                case 'mi':
+                    // 1 degree = 69.05482 miles, based on the average diameter of the Earth (7,913.1 miles)
+                    $distance = $degrees * 69.05482;
+                    break;
+                case 'nmi':
+                    // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
+                    $distance = $degrees * 59.97662;
+            }
+            return $distance;
+        }catch (\Exception $e ){
+            $data = [
+                'action' => 'get Distance Between Origin And Destination',
+                'exception' => $e->getMessage(),
+                'params' => [
+                    'origin' => $origin,
+                    'destination' => $destination,
+                ]
+            ];
+            Log::critical(json_encode($data));
         }
-        return $distance;
+
     }
 
-    private function calcDistance($point1, $point2)
+    protected function calcDistance($point1, $point2)
     {
-        return rad2deg(acos((sin(deg2rad($point1['latitude'])) *
-                sin(deg2rad($point2['latitude']))) +
-            (cos(deg2rad($point1['latitude'])) *
-                cos(deg2rad($point2['latitude'])) *
-                cos(deg2rad($point1['longitude'] - $point2['longitude'])))));
+        try{
+            return rad2deg(acos((sin(deg2rad($point1['latitude'])) *
+                    sin(deg2rad($point2['latitude']))) +
+                (cos(deg2rad($point1['latitude'])) *
+                    cos(deg2rad($point2['latitude'])) *
+                    cos(deg2rad($point1['longitude'] - $point2['longitude'])))));
+        }catch (\Exception $e){
+            $data = [
+                'action' => 'Calculate Distance',
+                'exception' => $e->getMessage(),
+                'params' => [
+                    'origin' => $point1,
+                    'destination' => $point2,
+                ]
+            ];
+            Log::critical(json_encode($data));
+        }
+
     }
 
     public function getDistanceByGoogleApi(Request $request){
@@ -366,6 +394,8 @@ class OfferController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return $data;
     }

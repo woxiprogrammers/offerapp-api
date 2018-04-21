@@ -58,6 +58,7 @@ class CustomerController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }
@@ -86,6 +87,7 @@ class CustomerController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }

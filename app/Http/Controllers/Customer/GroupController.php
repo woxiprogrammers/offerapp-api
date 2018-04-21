@@ -48,6 +48,8 @@ class GroupController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
     }
@@ -86,6 +88,8 @@ class GroupController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
+
         }
         return response()->json($data);
     }
@@ -117,6 +121,7 @@ class GroupController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
         }
         return response()->json($data);
     }

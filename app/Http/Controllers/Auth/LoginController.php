@@ -72,6 +72,7 @@ class LoginController extends BaseController
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
+            Log::critical(json_encode($data));
             $response = [
                 'message' => $message,
                 'token' => $token,
