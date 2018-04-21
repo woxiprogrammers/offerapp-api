@@ -46,8 +46,8 @@ class RegisterController extends BaseController
                 'password' => 'required|string|min:6',
                 'mobile_no' => 'required|regex:/[0-9]/|unique:users,mobile_no,',
             ]);*/
-            $role = $request['role'];
-            $role_id = Role::where('slug', $role)->pluck('id')->first();
+            $role_id = $request['role_id'];
+            //$role_id = Role::where('id', $role)->pluck('id')->first();
 
             $user = User::create([
                 'role_id' => $role_id,
@@ -82,6 +82,9 @@ class RegisterController extends BaseController
 
         }
         catch (\Exception $e){
+            $status = 500;
+            $message = $e->getMessage();
+            $token = '';
             if ($e instanceof ValidationException){
                 $errors = $e->response;
 

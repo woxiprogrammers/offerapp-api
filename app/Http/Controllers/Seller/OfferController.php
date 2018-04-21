@@ -104,7 +104,17 @@ class OfferController extends BaseController
             $valid_to = $offer->valid_to;
             $offerList['start_date'] = date('d F, Y', strtotime($valid_from));
             $offerList['end_date'] = date('d F, Y', strtotime($valid_to));
-            $data['offer_detail'] = $offerList;
+            $offerImages = $offer->offerImages;
+            $offerList['images'] = array();
+            $iterator = 0;
+            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+            $sha1OfferId = sha1($offer['id']);
+            foreach($offerImages as $key => $offerImage){
+                $offerList['images'][$iterator]['image_id'] = $offerImage['id'];
+                $offerList['images'][$iterator]['image_url'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImage['name'];
+                $iterator++;
+            }
+            $data = $offerList;
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
