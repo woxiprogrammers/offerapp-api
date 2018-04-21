@@ -32,8 +32,7 @@ class OfferController extends BaseController
         }
     }
 
-    public function getOfferListing(Request $request)
-    {
+    public function getOfferListing(Request $request){
         try {
             $user = Auth::user();
             $seller = Seller::where('user_id', $user['id'])->first();
@@ -84,8 +83,7 @@ class OfferController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function getOfferDetail(Request $request)
-    {
+    public function getOfferDetail(Request $request){
         try {
             $offerId = $request['offer_id'];
             $offer = Offer::where('id', $offerId)->first();
@@ -96,7 +94,6 @@ class OfferController extends BaseController
             $offerList['floor_no'] = $sellerAddress->floor->no;
             $offerList['seller_address'] = $sellerAddress->shop_name . ' ' . $sellerAddress->city;
             $offerList['full_seller_address'] = $sellerAddress->floor->no . ' ' . $sellerAddress->shop_name . ' ' . $sellerAddress->address . ' ' . $sellerAddress->city . ' ' . $sellerAddress->state . ' ' . $sellerAddress->zipcode;
-            // $offerList['offer_images'] = $offer->offerImages->name;
             $offerList['offer_type_name'] = $offer->offerType->name;
             $offerList['offer_status_name'] = $offer->offerStatus->name;
             $offerList['offer_description'] = ($offer->description == null) ? '' : $offer->description;
@@ -211,7 +208,4 @@ class OfferController extends BaseController
         ];
         return response()->json($response, $status);
     }
-
-
-
 }
