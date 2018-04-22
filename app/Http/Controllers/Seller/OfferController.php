@@ -54,8 +54,10 @@ class OfferController extends BaseController
                     $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
                     $offerList[$iterator]['offer_status_name'] = $offer->offerStatus->name;
                     $offerList[$iterator]['offer_description'] = $offer->description;
-                    $offerList[$iterator]['valid_from'] = $offer['valid_from'];
-                    $offerList[$iterator]['valid_to'] = $offer['valid_to'];
+                    $valid_from = $offer->valid_from;
+                    $valid_to = $offer->valid_to;
+                    $offerList[$iterator]['start_date'] = date('d F, Y', strtotime($valid_from));
+                    $offerList[$iterator]['end_date'] = date('d F, Y', strtotime($valid_to));
                     $offerList[$iterator]['wishlist_count'] = 1;
                     $offerList[$iterator]['interested_count'] = 1;
                     $offerList[$iterator]['grabbed_count'] = 1;
@@ -101,7 +103,17 @@ class OfferController extends BaseController
             $valid_to = $offer->valid_to;
             $offerList['start_date'] = date('d F, Y', strtotime($valid_from));
             $offerList['end_date'] = date('d F, Y', strtotime($valid_to));
-            $data['offer_detail'] = $offerList;
+            $offerImages = $offer->offerImages;
+            $offerList['images'] = array();
+            $iterator = 0;
+            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+            $sha1OfferId = sha1($offer['id']);
+            foreach($offerImages as $key => $offerImage){
+                $offerList['images'][$iterator]['image_id'] = $offerImage['id'];
+                $offerList['images'][$iterator]['image_url'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImage['name'];
+                $iterator++;
+            }
+            $data = $offerList;
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -142,6 +154,7 @@ class OfferController extends BaseController
             $data = [
                 'action' => 'Offer Type Listing',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
             abort(500);
@@ -208,4 +221,38 @@ class OfferController extends BaseController
         ];
         return response()->json($response, $status);
     }
+
+    /*public function selectOffer(){
+        try {
+            $user = Auth::user();
+            $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
+            $seller_address_id= SellerAddress::where('seller_id',$seller_id)->pluck('id')->first();
+            $seller_offer = Offer::where('seller_address_id',$seller_address_id)->get();
+            $iterator = 0;
+            $offerList = array();
+            foreach ($seller_offer as $key => $offer) {
+                $offerList[$iterator]['offer_id'] = $offer['id'];
+                $offerList[$iterator]['offer_name'] = $offer->offerType->name;
+                $iterator++;
+            }
+            $data['select_offer'] = $offerList;
+            $message = 'Success';
+            $status = 200;
+        } catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Offer Selection',
+                'exception' => $e->getMessage(),
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'status' => $status,
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
+    }*/
 }

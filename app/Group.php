@@ -13,4 +13,8 @@ class Group extends Model
     public function seller(){
         return $this->belongsTo('App\Seller','seller_id');
     }
+
+    public function groupCustomer(){
+        return $this->hasMany('App\GroupCustomer','group_id');
+    }
 }

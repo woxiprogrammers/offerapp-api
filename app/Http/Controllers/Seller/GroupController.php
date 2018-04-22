@@ -9,13 +9,17 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Customer;
-use App\GroupCustomer;use App\User;
+use App\GroupCustomer;
+use App\GroupMessage;
+use App\Offer;
+use App\User;
 use App\Group;
 use App\Seller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Lumen\Routing\Controller as BaseController;
+use Mockery\Exception;
 
 class GroupController extends BaseController
 {
@@ -39,6 +43,8 @@ class GroupController extends BaseController
             foreach ($seller_groups as $key => $group) {
                 $groupList[$iterator]['group_id'] = $group['id'];
                 $groupList[$iterator]['group_name'] = $group['name'];
+                $groupList[$iterator]['total_member'] = $group->groupCustomer->count();
+
                 $iterator++;
             }
             $data['select_groups'] = $groupList;
@@ -62,7 +68,7 @@ class GroupController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function addToGroup(Request $request){
+    public function addMemberToGroup(Request $request){
         try{
             $group_id = $request['group_id'];
             $mobile_no = $request ['mobile_no'];
@@ -102,4 +108,120 @@ class GroupController extends BaseController
         return response()->json($response, $status);
     }
 
+    public function getGroupDetail(Request $request){
+        try {
+            $group_id = $request['group_id'];
+            $customerIds = GroupCustomer::where('group_id', $group_id)->pluck('customer_id');
+            $iterator = 0;
+            $memberDetailList = array();
+            foreach ($customerIds as $key => $customerId){
+                $customerData = User::join('customers','customers.user_id','=','users.id')
+                                    ->select('users.id','users.first_name','users.last_name','users.mobile_no','users.email')
+                                    ->where('customers.id',$customerId)
+                                    ->first();
+                $memberDetailList[$iterator]['customer_id'] = $customerId;
+                $memberDetailList[$iterator]['customer_name'] = $customerData['first_name'].' '.$customerData['last_name'];
+                $memberDetailList[$iterator]['customer_mobile'] = $customerData['mobile_no'];
+                $memberDetailList[$iterator]['customer_email'] = $customerData['email'];
+                $iterator++;
+            }
+            $data['group_details'] = $memberDetailList;
+            $message = 'Success';
+            $status = 200;
+        } catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Group Listing',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
+    }
+
+    public function groupOfferListing(Request $request){
+        try{
+            $group_id = $request['group_id'];
+            $group_offers_id = GroupMessage::where('group_id', $group_id)->pluck('offer_id');
+            $iterator = 0;
+            $offerList = array();
+
+            foreach ($group_offers_id as $key => $group_offer_id) {
+                $offers = Offer::where('id', $group_offer_id)->get();
+
+                foreach ($offers as $key2 => $offer) {
+                    $offerList[$iterator]['offer_id'] = $offer['id'];
+                    $offerList[$iterator]['offer_type_id'] = $offer['offer_type_id'];
+                    $offerList[$iterator]['offer_type_name'] = $offer->offerType->name;
+                    $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
+                    $offerList[$iterator]['offer_status_name'] = $offer->offerStatus->name;
+                    $offerList[$iterator]['offer_description'] = $offer->description;
+                    $valid_from = $offer->valid_from;
+                    $valid_to = $offer->valid_to;
+                    $offerList[$iterator]['start_date'] = date('d F, Y', strtotime($valid_from));
+                    $offerList[$iterator]['end_date'] = date('d F, Y', strtotime($valid_to));
+                    $iterator++;
+                }
+            }
+            $data['group_offers'] = $offerList;
+            $message = 'Success';
+            $status = 200;
+        } catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Group-Offer-Listing',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
+    }
+
+    public function createGroup(Request $request){
+        try{
+            $user = Auth::user();
+            $input = $request->all();
+            $seller_id = Seller::where('user_id',$user['id'])->pluck('id')->first();
+            $groupCount = Group::where('seller_id',$seller_id)->where('name',$input['group_name'])->count();
+            if($groupCount > 0){
+                $message = 'Group Name Already Exist';
+                $status = 412;
+
+            }else{
+                Group::create([
+                    'name' => $input['group_name'],
+                    'description' => $input['description'],
+                    'seller_id' => $seller_id
+                ]);
+                $message = 'Group created successfully';
+                $status = 200;
+            }
+        } catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Create Group',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'message' => $message,
+        ];
+        return response()->json($response, $status);
+    }
 }
