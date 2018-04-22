@@ -52,12 +52,12 @@ class SellerController extends BaseController
 
                 $data = [
                     'sellerAddress' => $seller_address,
-                    'sellerAddressUpdated' => true,
+                    'sellerAddressAdd' => true,
                 ];
             }else{
                 $data = [
                     'message' => 'Please Enter a Valid Selller\'s Detail',
-                    'sellerAddressUpdated' => false,
+                    'sellerAddressAdd' => false,
                 ];
             }
 
@@ -108,7 +108,7 @@ class SellerController extends BaseController
             }else{
                 $data = [
                     'message' => 'Please Enter a Valid Selller\'s Detail',
-                    'sellerAddressAdded' => false,
+                    'sellerAddressUpdated' => false,
                 ];
             }
 
@@ -134,8 +134,7 @@ class SellerController extends BaseController
 
     public function sellerDetailAddress($search_address){
         try{
-            $message = "Success";
-            $status = 200;
+
             $location = Mapper::location($search_address);
             $address = '';
             $city = '';

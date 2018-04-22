@@ -26,6 +26,9 @@ class CustomerController extends BaseController
 
     public function getLocation(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
+
             $coordinates = $request['coords'];
             $latlng = implode(",", [$coordinates['latitude'], $coordinates['longitude']]);
             $apiKey = urlencode(env('GOOGLE_API_KEY'));
@@ -51,21 +54,31 @@ class CustomerController extends BaseController
                 'locationName' => $shortAddress,
                 'status' => 200
             ];
+            $response = [
+                'data' => $data,
+                'message' => $message
+            ];
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Location',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            $response = [
+                'data' => $data,
+                'message' => $message
+            ];
         }
-        return response()->json($data);
+        return response()->json($response, $status);
     }
 
     public function setLocation(Request $request){
         try{
-
+            $message = "Success";
+            $status = 200;
             $address = $request['locationName'];
 
             $location = Mapper::location($address);
@@ -80,15 +93,24 @@ class CustomerController extends BaseController
                 ],
                 'status' => 200
             ];
+            $response = [
+                'data' => $data,
+                'message' => $message
+            ];
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Set Location',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            $response = [
+                'data' => $data,
+                'message' => $message
+            ];
         }
-        return response()->json($data);
+        return response()->json($response, $status);
     }
 }
