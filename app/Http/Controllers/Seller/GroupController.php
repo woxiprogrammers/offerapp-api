@@ -196,23 +196,25 @@ class GroupController extends BaseController
         try{
             $user = Auth::user();
             $input = $request->all();
-            $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
-            $admin_data = User::where('id',$user['id'])->get();
-            $adminDetail = array();
+            $seller_id = Seller::where('user_id',$user['id'])->pluck('id')->first();
+            $groups =Group::where('seller_id',$seller_id)->pluck('name')->all();
+            $group_name = $input['group_name'];
+            foreach ($groups as $key => $group)
 
-            foreach($admin_data as $key =>$admin){
-                $adminDetail['admin_name']= $admin['first_name'].' '.$admin['last_name'];
-                $adminDetail['admin_mobile_no'] = $admin['mobile_no'];
-            }
-            Group::create([
-                'name' => $input['group_name'],
-                'description' => $input['description'],
-                'seller_id' => $seller_id
-            ]);
+                if($group_name != $group ) {
 
-            $data ['seller_detail'] = $adminDetail;
-            $message = 'Success';
-            $status = 200;
+                    Group::create([
+                        'name' => $input['group_name'],
+                        'description' => $input['description'],
+                        'seller_id' => $seller_id
+                    ]);
+                    $message = 'Group created successfully';
+                    $status = 200;
+                }else{
+                    $message = 'Group Name Already Exist';
+                    $status = 412;
+                }
+
         } catch (\Exception $e) {
             $message = "Fail";
             $status = 500;
@@ -228,8 +230,6 @@ class GroupController extends BaseController
         $response = [
             'status' => $status,
             'message' => $message,
-            'data' => $data,
-
         ];
         return response()->json($response, $status);
     }

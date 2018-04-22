@@ -244,7 +244,7 @@ class OfferController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Offer Listing',
+                'action' => 'Offer Selection',
                 'exception' => $e->getMessage(),
             ];
             Log::critical(json_encode($data));
