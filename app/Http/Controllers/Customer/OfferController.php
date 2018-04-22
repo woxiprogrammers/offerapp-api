@@ -87,6 +87,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -102,7 +103,7 @@ class OfferController extends BaseController
             $status = 200;
             $data = array();
             $user = Auth::user();
-            $user_id = user['id'];
+            $user_id = Auth::user()->id;
             $offer_id = $request['offerId'];
 
             $offers = array();
@@ -114,33 +115,36 @@ class OfferController extends BaseController
             $customer_offer = CustomerOfferDetail::where('customer_id',$customer_id)
                 ->where('offer_id',$offer_id)
                 ->first();
-            $offer = $customer_offer->offer;
-            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
-            $sha1OfferId = sha1($offer['id']);
-            $offers['offerId'] = $offer->id;
-            $offers['offerName'] = $offer->offerType->name;
-            $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offer->offerImages->first()->name;
-            $seller = $offer->sellerAddress->seller;
-            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
-            $valid_to = $offer->valid_to;
-            $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
-            $offers['sellerNumber'] = $offer->sellerAddress->landline;
-            $offers['offerLatitude'] = $offer->sellerAddress->latitude;
-            $offers['offerLongitude'] = $offer->sellerAddress->longitude;
-            $offers['offerDescription'] = $offer->description;
-            $offers['addedToWishList'] = $customer_offer->is_wishlist;
+            if(isset($customer_offer)){
+                $offer = $customer_offer->offer;
+                $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                $sha1OfferId = sha1($offer['id']);
+                $offers['offerId'] = $offer->id;
+                $offers['offerName'] = $offer->offerType->name;
+                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offer->offerImages->first()->name;
+                $seller = $offer->sellerAddress->seller;
+                $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+                $valid_to = $offer->valid_to;
+                $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
+                $offers['sellerNumber'] = $offer->sellerAddress->landline;
+                $offers['offerLatitude'] = $offer->sellerAddress->latitude;
+                $offers['offerLongitude'] = $offer->sellerAddress->longitude;
+                $offers['offerDescription'] = $offer->description;
+                $offers['addedToWishList'] = $customer_offer->is_wishlist;
 
-            $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
-            if($offer_status == 'interested'){
-                $offers['addedToInterested'] = true;
-            }else{
-                $offers['addedToInterested'] = false;
+                $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
+                if($offer_status == 'interested'){
+                    $offers['addedToInterested'] = true;
+                }else{
+                    $offers['addedToInterested'] = false;
+                }
+                $images = OfferImage::where('offer_id',$offer_id)->get();
+                foreach($images as $key => $image){
+                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
+                    $loadQueue[$key] = 0;
+                }
             }
-            $images = OfferImage::where('offer_id',$offer_id)->get();
-            foreach($images as $key => $image){
-                $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
-                $loadQueue[$key] = 0;
-            }
+
             $data = [
                 'offerDetail' => $offers,
                 'imageList' => $imageList,
@@ -205,6 +209,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -254,6 +259,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -269,7 +275,6 @@ class OfferController extends BaseController
             $data = array();
             $user = Auth::user();
             $user_id = $user['id'];
-            $user_id = Auth::user()->id;
             $offer_id = $request['offerId'];
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
 
@@ -287,8 +292,6 @@ class OfferController extends BaseController
                 $data = [
                     'removed' => false
                 ];
-                Log::critical(json_encode($data));
-
             }
 
         }catch(\Exception $e){
@@ -300,7 +303,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -352,7 +355,6 @@ class OfferController extends BaseController
                 ],
             ];
 
-
         }catch (\Exception $e){
             $message = "Fail";
             $status = 500;
@@ -362,6 +364,7 @@ class OfferController extends BaseController
                 'errorMessage' => $e->getMessage()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
