@@ -50,14 +50,14 @@ $app->group(['prefix' => 'customer'], function () use($app){
     $app->group(['prefix' => 'seller'], function () use($app){
         $app->group(['prefix' => 'offer'], function () use($app){
             $app->get('type',array('uses' => 'Seller\OfferController@getOfferType'));
-            $app->get('select',array('uses' => 'Seller\OfferController@selectOffer'));
+           // $app->get('select',array('uses' => 'Seller\OfferController@selectOffer'));
             $app->post('create', array('uses' => 'Seller\OfferController@createOffer'));
             $app->post('listing', array('uses' => 'Seller\OfferController@getOfferListing'));
             $app->post('detail',array('uses' => 'Seller\OfferController@getOfferDetail'));
         });
         $app->group(['prefix' => 'group'], function () use($app){
             $app->get('list',array('uses' => 'Seller\GroupController@getGroupList'));
-            $app->post('add',array('uses' => 'Seller\GroupController@addToGroup'));
+            $app->post('add-member',array('uses' => 'Seller\GroupController@addMemberToGroup'));
             $app->post('detail',array('uses' => 'Seller\GroupController@getGroupDetail'));
             $app->post('offers',array('uses' => 'Seller\GroupController@groupOfferListing'));
             $app->post('create',array('uses' => 'Seller\GroupController@createGroup'));

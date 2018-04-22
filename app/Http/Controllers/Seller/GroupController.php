@@ -68,7 +68,7 @@ class GroupController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function addToGroup(Request $request){
+    public function addMemberToGroup(Request $request){
         try{
             $group_id = $request['group_id'];
             $mobile_no = $request ['mobile_no'];
@@ -110,7 +110,6 @@ class GroupController extends BaseController
 
     public function getGroupDetail(Request $request){
         try {
-           // $user = Auth::user();
             $group_id = $request['group_id'];
             $customerIds = GroupCustomer::where('group_id', $group_id)->pluck('customer_id');
             $iterator = 0;
@@ -135,12 +134,11 @@ class GroupController extends BaseController
             $data = [
                 'action' => 'Group Listing',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
-            'status' => $status,
             'message' => $message,
             'data' => $data
         ];
@@ -180,12 +178,11 @@ class GroupController extends BaseController
             $data = [
                 'action' => 'Group-Offer-Listing',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
-            'status' => $status,
             'message' => $message,
             'data' => $data
         ];
@@ -197,24 +194,20 @@ class GroupController extends BaseController
             $user = Auth::user();
             $input = $request->all();
             $seller_id = Seller::where('user_id',$user['id'])->pluck('id')->first();
-            $groups =Group::where('seller_id',$seller_id)->pluck('name')->all();
-            $group_name = $input['group_name'];
-            foreach ($groups as $key => $group)
+            $groupCount = Group::where('seller_id',$seller_id)->where('name',$input['group_name'])->count();
+            if($groupCount > 0){
+                $message = 'Group Name Already Exist';
+                $status = 412;
 
-                if($group_name != $group ) {
-
-                    Group::create([
-                        'name' => $input['group_name'],
-                        'description' => $input['description'],
-                        'seller_id' => $seller_id
-                    ]);
-                    $message = 'Group created successfully';
-                    $status = 200;
-                }else{
-                    $message = 'Group Name Already Exist';
-                    $status = 412;
-                }
-
+            }else{
+                Group::create([
+                    'name' => $input['group_name'],
+                    'description' => $input['description'],
+                    'seller_id' => $seller_id
+                ]);
+                $message = 'Group created successfully';
+                $status = 200;
+            }
         } catch (\Exception $e) {
             $message = "Fail";
             $status = 500;
@@ -225,10 +218,8 @@ class GroupController extends BaseController
 
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
-            'status' => $status,
             'message' => $message,
         ];
         return response()->json($response, $status);

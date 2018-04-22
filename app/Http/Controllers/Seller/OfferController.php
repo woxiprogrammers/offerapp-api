@@ -137,7 +137,7 @@ class OfferController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function getOfferType(){
+    public function getOfferType(Request $request){
         try {
             $offerTypes = OfferType::all();
             $iterator = 0;
@@ -157,6 +157,7 @@ class OfferController extends BaseController
             $data = [
                 'action' => 'Offer Type Listing',
                 'exception' => $e->getMessage(),
+                'params' => $request->all()
             ];
             Log::critical(json_encode($data));
             abort(500);
@@ -224,7 +225,7 @@ class OfferController extends BaseController
         return response()->json($response, $status);
     }
 
-    public function selectOffer(){
+    /*public function selectOffer(){
         try {
             $user = Auth::user();
             $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
@@ -256,7 +257,7 @@ class OfferController extends BaseController
             'data' => $data
         ];
         return response()->json($response, $status);
-    }
+    }*/
 
 
 
