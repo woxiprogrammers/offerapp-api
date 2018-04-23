@@ -61,11 +61,20 @@ class OfferController extends BaseController
                 $customer_offers = array();
             }
             foreach ($customer_offers as $key => $customer_offer){
-                $offers[$key]['offerId'] = $customer_offer->offer->id;
-                $offers[$key]['offerName'] = $customer_offer->offer->offerType->name;
-                $offers[$key]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$customer_offer->offer->offerImages->first()->name;
-                $offers[$key]['sellerInfo'] = $customer_offer->offer->sellerAddress->seller->user->first_name.' '.$customer_offer->offer->sellerAddress->seller->user->last_name;
-                $valid_to = $customer_offer->offer->valid_to;
+                $offer = $customer_offer->offer;
+                $offers[$key]['offerId'] = $offer->id;
+                $offers[$key]['offerName'] = $offer->offerType->name;
+
+                if(count($offer->offerImages) > 0){
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer->id);
+                    $offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                }else{
+                    $offers[$key]['offerPic'] = '';
+                }
+                $sellerUser = $offer->sellerAddress->seller->user;
+                $offers[$key]['sellerInfo'] = $sellerUser->first_name.' '.$sellerUser->last_name;
+                $valid_to = $offer->valid_to;
                 $offers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
                 $offers[$key]['grabCode'] = $customer_offer->offer_code;
             }
@@ -93,7 +102,6 @@ class OfferController extends BaseController
             'message' => $message
         ];
         return response()->json($response,$status);
-
     }
 
     public function getInterestedOfferDetail(Request $request){
