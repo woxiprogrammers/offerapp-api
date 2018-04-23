@@ -10,16 +10,11 @@
 namespace App\Http\Controllers\CustomTraits;
 
 use App\Floor;
-use App\Offer;
-use App\OfferImage;
-use App\OfferStatus;
+
 use App\OfferType;
 use App\ReachTime;
-use App\SellerAddress;
 use App\Category;
-use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 trait OfferTrait{
@@ -107,10 +102,9 @@ trait OfferTrait{
             foreach ($categories as $key => $category){
                 if (isset($category->id)){
                     $sub_category = Category::whereNotNull('category_id')
-                        ->where('category_id', $category->id)
                         ->select('id','name','slug')
+                        ->where('category_id', $category->id)
                         ->get();
-
                         $categories[$key]['subCategory'] = $sub_category;
                 }else{
                     $categories[$key] = $category;

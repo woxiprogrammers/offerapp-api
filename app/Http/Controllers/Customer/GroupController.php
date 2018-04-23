@@ -14,6 +14,7 @@ use App\GroupCustomer;
 use App\GroupMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class GroupController extends BaseController
@@ -27,31 +28,40 @@ class GroupController extends BaseController
     }
     public function getGroupList(Request $request){
         try{
+
             $user_id = Auth::user()->id;
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
             $groups = array();
+            $message = 'Success';
+            $status = 200;
             $customer_groups = GroupCustomer::where('customer_id',$customer_id)->get();
             foreach($customer_groups as $key => $customer_group){
                     $groups[$key]['groupId'] = $customer_group->group->id;
                     $groups[$key]['groupName'] = $customer_group->group->name;
                 }
-
                 $data = [
-                    'records' => $groups
+                        'records' => $groups
                 ];
-
-
+            $response = [
+                'data' => $data,
+                'message' => $message
+            ];
         }catch(\Exception $e){
-
+            $message = 'Fail';
+            $status = 500;
             $data = [
                 'action' => 'Get Customer Group List',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-
+            $response = [
+              'data' => $data,
+              'message' => $message
+            ];
         }
-        return response()->json($data);
+
+        return response()->json($response, $status);
     }
 
     public function getGroupOffers(Request $request){
@@ -59,16 +69,25 @@ class GroupController extends BaseController
 
             $group_id = $request['groupId'];
             $offers = array();
-
+            $message = "Success";
+            $status = 200;
             $seller_group_id = Group::where('id',$group_id)->pluck('seller_id')->first();
             $group_messages = GroupMessage::where('reference_member_id',$seller_group_id)
                 ->paginate($this->perPage);
 
             foreach ($group_messages as $key => $group_message){
-                $offers[$key]['offerId'] = $group_message->offer->id;
-                $offers[$key]['offerName'] = $group_message->offer->offerType->name;
-                $offers[$key]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$group_message->offer->offerImages->first()->name;
-                $offers[$key]['sellerInfo'] = $group_message->offer->sellerAddress->seller->user->first_name.' '.$group_message->offer->sellerAddress->seller->user->last_name;
+                $offer = $group_message->offer;
+                $offers[$key]['offerId'] = $offer->id;
+                $offers[$key]['offerName'] = $offer->offerType->name;
+                $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                $sha1OfferId = sha1($offer->id);
+                if(count($offer->offerImages) > 0){
+                    $offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                }else{
+                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                }
+                $sellerUser = $group_message->offer->sellerAddress->seller->user;
+                $offers[$key]['sellerInfo'] = $sellerUser->first_name.' '.$sellerUser->last_name;
                 $valid_to = $group_message->offer->valid_to;
                 $offers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
             }
@@ -81,8 +100,10 @@ class GroupController extends BaseController
                     'totalCount' => $group_messages->total(),
                 ],
             ];
-        }catch(\Exception $e){
 
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Get Group Offers',
                 'exception' => $e->getMessage(),
@@ -91,11 +112,17 @@ class GroupController extends BaseController
             Log::critical(json_encode($data));
 
         }
-        return response()->json($data);
+        $response  = [
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
     }
 
     public function leaveGroup(Request $request){
         try{
+            $message = "Success";
+            $status = 200;
             $user_id = Auth::user()->id;
             $group_id = $request['groupId'];
 
@@ -113,17 +140,22 @@ class GroupController extends BaseController
                     'removed' => false
                 ];
             }
-
         }catch(\Exception $e){
-
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'Remove Group',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
-        return response()->json($data);
+        $response  = [
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
     }
 
 }

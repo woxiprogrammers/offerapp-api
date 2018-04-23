@@ -33,8 +33,7 @@ class SellerController extends BaseController
         }
     }
 
-    public function addSellerAddress(Request $request)
-    {
+    public function addSellerAddress(Request $request){
         try {
             $message = "Success";
             $status = 200;
@@ -60,12 +59,12 @@ class SellerController extends BaseController
 
                 $data = [
                     'sellerAddress' => $seller_address,
-                    'sellerAddressUpdated' => true,
+                    'sellerAddressAdd' => true,
                 ];
             } else {
                 $data = [
                     'message' => 'Please Enter a Valid Selller\'s Detail',
-                    'sellerAddressUpdated' => false,
+                    'sellerAddressAdd' => false,
                 ];
             }
 
@@ -117,7 +116,7 @@ class SellerController extends BaseController
             } else {
                 $data = [
                     'message' => 'Please Enter a Valid Selller\'s Detail',
-                    'sellerAddressAdded' => false,
+                    'sellerAddressUpdated' => false,
                 ];
             }
 
@@ -141,8 +140,7 @@ class SellerController extends BaseController
 
     }
 
-    public function sellerDetailAddress($search_address)
-    {
+    public function sellerDetailAddress($search_address){
         try {
             $message = "Success";
             $status = 200;
@@ -186,8 +184,7 @@ class SellerController extends BaseController
         return $data;
     }
 
-    public function getAccountInfo(Request $request)
-    {
+    public function getAccountInfo(Request $request){
         try {
             $user = Auth::user();
             $seller_id = Seller::where('user_id', $user['id'])->pluck('id')->first();
