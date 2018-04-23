@@ -35,7 +35,7 @@ class LoginController extends BaseController
                 $userData['lastName'] = $user['last_name'];
                 $userData['email'] = $user['email'];
                 $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
-                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
+                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.png' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{

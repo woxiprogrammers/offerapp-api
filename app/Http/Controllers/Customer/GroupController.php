@@ -14,6 +14,7 @@ use App\GroupCustomer;
 use App\GroupMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class GroupController extends BaseController
@@ -73,7 +74,7 @@ class GroupController extends BaseController
                 if(count($offer->offerImages) > 0){
                     $offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
                 }else{
-                    $offers[$key]['offerPic'] = '';
+                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                 }
                 $sellerUser = $group_message->offer->sellerAddress->seller->user;
                 $offers[$key]['sellerInfo'] = $sellerUser->first_name.' '.$sellerUser->last_name;
