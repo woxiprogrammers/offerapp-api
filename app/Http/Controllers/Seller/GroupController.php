@@ -99,7 +99,6 @@ class GroupController extends BaseController
 
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
             'status' => $status,

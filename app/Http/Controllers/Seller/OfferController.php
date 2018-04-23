@@ -53,6 +53,7 @@ class OfferController extends BaseController
                     $offerList[$iterator]['offer_type_name'] = $offer->offerType->name;
                     $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
                     $offerList[$iterator]['offer_status_name'] = $offer->offerStatus->name;
+                    $offerList[$iterator]['offer_status_slug'] = $offer->offerStatus->slug;
                     $offerList[$iterator]['offer_description'] = $offer->description;
                     $valid_from = $offer->valid_from;
                     $valid_to = $offer->valid_to;
