@@ -96,6 +96,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -222,6 +223,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -271,6 +273,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -286,7 +289,6 @@ class OfferController extends BaseController
             $data = array();
             $user = Auth::user();
             $user_id = $user['id'];
-            $user_id = Auth::user()->id;
             $offer_id = $request['offerId'];
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
 
@@ -304,8 +306,6 @@ class OfferController extends BaseController
                 $data = [
                     'removed' => false
                 ];
-                Log::critical(json_encode($data));
-
             }
 
         }catch(\Exception $e){
@@ -317,7 +317,7 @@ class OfferController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-
+            abort(500);
         }
         $response = [
             'data' => $data,
@@ -375,7 +375,6 @@ class OfferController extends BaseController
                 ],
             ];
 
-
         }catch (\Exception $e){
             $message = "Fail";
             $status = 500;
@@ -385,6 +384,7 @@ class OfferController extends BaseController
                 'errorMessage' => $e->getMessage()
             ];
             Log::critical(json_encode($data));
+            abort(500);
         }
         $response = [
             'data' => $data,
