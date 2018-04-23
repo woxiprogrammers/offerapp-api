@@ -91,12 +91,6 @@ $app->group(['prefix' => 'seller'], function () use($app){
 
     });
 
-    $app->group(['prefix' => 'seller'], function () use($app){
-        $app->group(['prefix' => 'account'], function () use($app) {
-            $app->post('info',array('uses' => 'Seller\SellerController@getAccountInfo'));
-            $app->post('edit',array('uses' => 'Seller\SellerController@editAccountInfo'));
-        });
-    });
 
 
     $app->group(['prefix' => 'offer'], function () use($app){
@@ -119,4 +113,10 @@ $app->post('save-image',array('uses' => 'ImageController@image'));
 
 $app->post('getdistance',array('uses' => 'Customer\OfferController@getDistanceByGoogleApi'));
 
+$app->group(['prefix' => 'seller'], function () use($app){
+    $app->group(['prefix' => 'account'], function () use($app) {
+        $app->get('info',array('uses' => 'Seller\SellerController@getAccountInfo'));
+        $app->post('edit',array('uses' => 'Seller\SellerController@editAccountInfo'));
+    });
+});
 
