@@ -76,10 +76,18 @@ class GroupController extends BaseController
                 ->paginate($this->perPage);
 
             foreach ($group_messages as $key => $group_message){
-                $offers[$key]['offerId'] = $group_message->offer->id;
-                $offers[$key]['offerName'] = $group_message->offer->offerType->name;
-                $offers[$key]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$group_message->offer->offerImages->first()->name;
-                $offers[$key]['sellerInfo'] = $group_message->offer->sellerAddress->seller->user->first_name.' '.$group_message->offer->sellerAddress->seller->user->last_name;
+                $offer = $group_message->offer;
+                $offers[$key]['offerId'] = $offer->id;
+                $offers[$key]['offerName'] = $offer->offerType->name;
+                $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                $sha1OfferId = sha1($offer->id);
+                if(count($offer->offerImages) > 0){
+                    $offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                }else{
+                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                }
+                $sellerUser = $group_message->offer->sellerAddress->seller->user;
+                $offers[$key]['sellerInfo'] = $sellerUser->first_name.' '.$sellerUser->last_name;
                 $valid_to = $group_message->offer->valid_to;
                 $offers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
             }

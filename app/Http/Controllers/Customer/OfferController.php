@@ -61,11 +61,20 @@ class OfferController extends BaseController
                 $customer_offers = array();
             }
             foreach ($customer_offers as $key => $customer_offer){
-                $offers[$key]['offerId'] = $customer_offer->offer->id;
-                $offers[$key]['offerName'] = $customer_offer->offer->offerType->name;
-                $offers[$key]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$customer_offer->offer->offerImages->first()->name;
-                $offers[$key]['sellerInfo'] = $customer_offer->offer->sellerAddress->seller->user->first_name.' '.$customer_offer->offer->sellerAddress->seller->user->last_name;
-                $valid_to = $customer_offer->offer->valid_to;
+                $offer = $customer_offer->offer;
+                $offers[$key]['offerId'] = $offer->id;
+                $offers[$key]['offerName'] = $offer->offerType->name;
+
+                if(count($offer->offerImages) > 0){
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer->id);
+                    $offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                }else{
+                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';;
+                }
+                $sellerUser = $offer->sellerAddress->seller->user;
+                $offers[$key]['sellerInfo'] = $sellerUser->first_name.' '.$sellerUser->last_name;
+                $valid_to = $offer->valid_to;
                 $offers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
                 $offers[$key]['grabCode'] = $customer_offer->offer_code;
             }
@@ -94,7 +103,6 @@ class OfferController extends BaseController
             'message' => $message
         ];
         return response()->json($response,$status);
-
     }
 
     public function getInterestedOfferDetail(Request $request){
@@ -103,7 +111,7 @@ class OfferController extends BaseController
             $status = 200;
             $data = array();
             $user = Auth::user();
-            $user_id = Auth::user()->id;
+            $user_id = $user['id'];
             $offer_id = $request['offerId'];
 
             $offers = array();
@@ -115,30 +123,36 @@ class OfferController extends BaseController
             $customer_offer = CustomerOfferDetail::where('customer_id',$customer_id)
                 ->where('offer_id',$offer_id)
                 ->first();
-            if(isset($customer_offer)){
-                $offer = $customer_offer->offer;
-                $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
-                $sha1OfferId = sha1($offer['id']);
-                $offers['offerId'] = $offer->id;
-                $offers['offerName'] = $offer->offerType->name;
-                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offer->offerImages->first()->name;
-                $seller = $offer->sellerAddress->seller;
-                $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
-                $valid_to = $offer->valid_to;
-                $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
-                $offers['sellerNumber'] = $offer->sellerAddress->landline;
-                $offers['offerLatitude'] = $offer->sellerAddress->latitude;
-                $offers['offerLongitude'] = $offer->sellerAddress->longitude;
-                $offers['offerDescription'] = $offer->description;
-                $offers['addedToWishList'] = $customer_offer->is_wishlist;
+            $offer = $customer_offer->offer;
+            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+            $sha1OfferId = sha1($offer['id']);
+            $offers['offerId'] = $offer->id;
+            $offers['offerName'] = $offer->offerType->name;
+            $offerImages = $customer_offer->offer->offerImages;
+            if(count($offerImages) > 0){
+                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
+            }else{
+                $offers['offerPic'] = '/uploads/no_image.jpg';
+            }
 
-                $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
-                if($offer_status == 'interested'){
-                    $offers['addedToInterested'] = true;
-                }else{
-                    $offers['addedToInterested'] = false;
-                }
-                $images = OfferImage::where('offer_id',$offer_id)->get();
+            $seller = $offer->sellerAddress->seller;
+            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+            $valid_to = $offer->valid_to;
+            $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
+            $offers['sellerNumber'] = $offer->sellerAddress->landline;
+            $offers['offerLatitude'] = $offer->sellerAddress->latitude;
+            $offers['offerLongitude'] = $offer->sellerAddress->longitude;
+            $offers['offerDescription'] = $offer->description;
+            $offers['addedToWishList'] = $customer_offer->is_wishlist;
+
+            $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
+            if($offer_status == 'interested'){
+                $offers['addedToInterested'] = true;
+            }else{
+                $offers['addedToInterested'] = false;
+            }
+            $images = OfferImage::where('offer_id',$offer_id)->get();
+            if(count($images) > 0){
                 foreach($images as $key => $image){
                     $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
                     $loadQueue[$key] = 0;
@@ -337,7 +351,13 @@ class OfferController extends BaseController
                 foreach ($offers  as $offer){
                     $near_by_offer[$iterator]['offerId'] = $offer->id;
                     $near_by_offer[$iterator]['offerName'] = $offer->offerType->name;
-                    $near_by_offer[$iterator]['offerPic'] = env('WEB_PUBLIC_PATH').env('OFFER_IMAGE_UPLOAD').$offer->offerImages->first()->name;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer->id);
+                    if(count($offer->offerImages) > 0){
+                        $near_by_offer[$iterator]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                    }else{
+                        $near_by_offer[$iterator]['offerPic'] = '/uploads/no_image.jpg';
+                    }
                     $near_by_offer[$iterator]['sellerInfo'] = $offer->sellerAddress->seller->user->first_name.' '.$offer->sellerAddress->seller->user->last_name;
                     $valid_to = $offer->valid_to;
                     $near_by_offer[$iterator]['offerExpiry']= date('d F, Y',strtotime($valid_to));
