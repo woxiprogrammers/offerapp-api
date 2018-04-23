@@ -102,10 +102,9 @@ trait OfferTrait{
             foreach ($categories as $key => $category){
                 if (isset($category->id)){
                     $sub_category = Category::whereNotNull('category_id')
-                        ->where('category_id', $category->id)
                         ->select('id','name','slug')
+                        ->where('category_id', $category->id)
                         ->get();
-
                         $categories[$key]['subCategory'] = $sub_category;
                 }else{
                     $categories[$key] = $category;

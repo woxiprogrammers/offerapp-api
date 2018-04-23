@@ -80,7 +80,6 @@ class CustomerController extends BaseController
             $message = "Success";
             $status = 200;
             $address = $request['locationName'];
-
             $location = Mapper::location($address);
             $latitude = $location->getLatitude();
             $longitude = $location->getLongitude();
@@ -93,10 +92,6 @@ class CustomerController extends BaseController
                 ],
                 'status' => 200
             ];
-            $response = [
-                'data' => $data,
-                'message' => $message
-            ];
         }catch(\Exception $e){
             $message = "Fail";
             $status = 500;
@@ -106,11 +101,11 @@ class CustomerController extends BaseController
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-            $response = [
-                'data' => $data,
-                'message' => $message
-            ];
         }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
         return response()->json($response, $status);
     }
 }
