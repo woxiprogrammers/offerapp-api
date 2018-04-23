@@ -34,6 +34,9 @@ class ImageController extends BaseController{
                     $tempUploadPath = env('WEB_PUBLIC_PATH').env('OFFER_TEMP_IMAGE_UPLOAD');
                     break;
 
+                case 'seller-address' :
+                    $tempUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_ADDRESS_TEMP_IMAGE_UPLOAD');
+                    break;
                 default :
                     $tempUploadPath = '';
             }
