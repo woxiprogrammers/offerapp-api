@@ -10,16 +10,11 @@
 namespace App\Http\Controllers\CustomTraits;
 
 use App\Floor;
-use App\Offer;
-use App\OfferImage;
-use App\OfferStatus;
+
 use App\OfferType;
 use App\ReachTime;
-use App\SellerAddress;
 use App\Category;
-use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 trait OfferTrait{
