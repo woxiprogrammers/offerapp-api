@@ -111,16 +111,8 @@ class OfferController extends BaseController
             $status = 200;
             $data = $imageList = $loadQueue = array();
             $user = Auth::user();
-            $offer_id = $request['offerId'];
 
             $offer = Offer::where('id',$request['offerId'])->first();
-
-
-            $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
-
-            $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
-                                ->where('offer_id',$offer['id'])
-                                ->first();
             $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
             $sha1OfferId = sha1($offer['id']);
             $offers['offerId'] = $offer->id;
@@ -128,10 +120,15 @@ class OfferController extends BaseController
             $offerImages = $offer->offerImages;
             if(count($offerImages) > 0){
                 $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
+                foreach($offerImages as $key => $image){
+                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
+                    $loadQueue[$key] = 0;
+                }
             }else{
                 $offers['offerPic'] = '/uploads/no_image.jpg';
+                $imageList[0] = '/uploads/no_image.jpg';
+                $loadQueue[0] = 0;
             }
-
             $seller = $offer->sellerAddress->seller;
             $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
             $valid_to = $offer->valid_to;
@@ -140,6 +137,10 @@ class OfferController extends BaseController
             $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
             $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
             $offers['offerDescription'] = $offer->description;
+            $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
+            $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
+                ->where('offer_id',$offer['id'])
+                ->first();
             $offers['addedToWishList'] = $customerOffer->is_wishlist;
 
             $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
@@ -148,17 +149,6 @@ class OfferController extends BaseController
             }else{
                 $offers['addedToInterested'] = false;
             }
-            $images = OfferImage::where('offer_id',$offer_id)->get();
-            if(count($images) > 0){
-                foreach($images as $key => $image){
-                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
-                    $loadQueue[$key] = 0;
-                }
-            }else{
-                $imageList[0] = '/uploads/no_image.jpg';
-                $loadQueue[0] = 0;
-            }
-
             $data = [
                 'offerDetail' => $offers,
                 'imageList' => $imageList,
