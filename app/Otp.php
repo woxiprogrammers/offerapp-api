@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 class Otp extends Model
 {
 
-    protected $table = 'otps';
+    protected $table = 'otp_verification';
 
     protected $fillable = ['id', 'mobile_no', 'otp'];
 

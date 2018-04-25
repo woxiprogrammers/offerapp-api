@@ -26,6 +26,8 @@ $app->group(['prefix' => 'customer'], function () use($app){
         $app->post('set',array('uses' => 'Customer\CustomerController@setLocation'));
     });
     $app->group(['prefix' => 'offer'], function () use($app){
+        $app->post('detail',array('uses' => 'Customer\OfferController@getCustomerOfferDetail'));
+
         $app->group(['prefix' => 'category'], function () use($app) {
             $app->get('listing', array('uses' => 'Customer\OfferController@getCategory'));
         });
@@ -45,7 +47,8 @@ $app->group(['prefix' => 'customer'], function () use($app){
                 $app->get('listing', array('uses' => 'Customer\OfferController@getReachInTime'));
             });
             $app->post('listing',array('uses' => 'Customer\OfferController@offerListing'));
-            $app->post('detail',array('uses' => 'Customer\OfferController@getInterestedOfferDetail'));
+            //$app->post('detail',array('uses' => 'Customer\OfferController@getInterestedOfferDetail'));
+
             $app->post('add',array('uses' => 'Customer\OfferController@addToInterest'));
 
         });
