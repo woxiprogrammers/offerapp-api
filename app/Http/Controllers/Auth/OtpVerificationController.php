@@ -23,6 +23,7 @@ class OtpVerificationController extends BaseController
             $mobile_no = $request['mobile_no'];
             if($mobile_no == null){
                 $message = "Please Enter a Valid Mobile No.";
+                $status = 412;
             }else{
                 $otp = $this->generateOtp();
 
@@ -46,16 +47,16 @@ class OtpVerificationController extends BaseController
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 $smsStatus = curl_exec($ch);
                 curl_close($ch);
+                $status = 200;
                 $message = "Sms sent successfully";
-                $response = $smsStatus;
 
                 $otpGen = new Otp();
                 $otpGen['mobile_no'] = $mobile_no;
                 $otpGen['otp'] = $otp;
                 $otpGen->save();
 
+
             }
-            $status = 200;
         }catch (\Exception $e){
             $message= "Fail";
             $status = 500;
@@ -69,9 +70,8 @@ class OtpVerificationController extends BaseController
         }
         $response = [
             'message' => $message,
-            'status'=>$status
         ];
-        return response()->json($response);
+        return response()->json($response,$status);
     }
 
 
@@ -79,19 +79,20 @@ class OtpVerificationController extends BaseController
         try{
             $mobile_no = $request['mobile_no'];
             $userotp = $request['otp'];
-            $otp = Otp::where('mobile_no',$mobile_no)->pluck('otp')->last();
+            $otp = Otp::where('mobile_no',$mobile_no)->orderBy('id','desc')->first();
             
-            if($otp == $userotp) {
+            if($otp['otp'] == $userotp) {
                 $message = "Valid Otp";
                 $status = 200;
+                $otp->delete();
             }else{
                 $message = "Invalid Otp...Please Enter Correct Otp";
-                $status = 500;
+                $status = 412;
             }
 
         }catch(\Exception $e){
-            $message = "Unable to send SMS";
-            $status = 401;
+            $message = "Fail";
+            $status = 500;
             $data = [
                 'action' => 'verify otp',
                 'exception' => $e->getMessage(),
@@ -102,9 +103,8 @@ class OtpVerificationController extends BaseController
         }
         $response = [
             'message' => $message,
-            'status' => $status
         ];
-        return response()->json($response);
+        return response()->json($response,$status);
 
     }
 

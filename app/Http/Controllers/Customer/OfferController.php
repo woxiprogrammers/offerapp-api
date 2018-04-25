@@ -105,7 +105,73 @@ class OfferController extends BaseController
         return response()->json($response,$status);
     }
 
-    public function getInterestedOfferDetail(Request $request){
+    public function getCustomerOfferDetail(Request $request){
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = $imageList = $loadQueue = array();
+            $user = Auth::user();
+
+            $offer = Offer::where('id',$request['offerId'])->first();
+            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+            $sha1OfferId = sha1($offer['id']);
+            $offers['offerId'] = $offer->id;
+            $offers['offerName'] = $offer->offerType->name;
+            $offerImages = $offer->offerImages;
+            if(count($offerImages) > 0){
+                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
+                foreach($offerImages as $key => $image){
+                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
+                    $loadQueue[$key] = 0;
+                }
+            }else{
+                $offers['offerPic'] = '/uploads/no_image.jpg';
+                $imageList[0] = '/uploads/no_image.jpg';
+                $loadQueue[0] = 0;
+            }
+            $seller = $offer->sellerAddress->seller;
+            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+            $valid_to = $offer->valid_to;
+            $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
+            $offers['sellerNumber'] = $offer->sellerAddress->landline;
+            $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
+            $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
+            $offers['offerDescription'] = $offer->description;
+            $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
+            $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
+                ->where('offer_id',$offer['id'])
+                ->first();
+            $offers['addedToWishList'] = $customerOffer->is_wishlist;
+
+            $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
+            if($offer_status == 'interested'){
+                $offers['addedToInterested'] = true;
+            }else{
+                $offers['addedToInterested'] = false;
+            }
+            $data = [
+                'offerDetail' => $offers,
+                'imageList' => $imageList,
+                'loadQueue' => $loadQueue
+            ];
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Get Interested Offer Detail ',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
+    /*public function getInterestedOfferDetail(Request $request){
         try{
             $message = "Success";
             $status = 200;
@@ -140,8 +206,8 @@ class OfferController extends BaseController
             $valid_to = $offer->valid_to;
             $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
             $offers['sellerNumber'] = $offer->sellerAddress->landline;
-            $offers['offerLatitude'] = $offer->sellerAddress->latitude;
-            $offers['offerLongitude'] = $offer->sellerAddress->longitude;
+            $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
+            $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
             $offers['offerDescription'] = $offer->description;
             $offers['addedToWishList'] = $customer_offer->is_wishlist;
 
@@ -157,6 +223,9 @@ class OfferController extends BaseController
                     $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
                     $loadQueue[$key] = 0;
                 }
+            }else{
+                $imageList[0] = '/uploads/no_image.jpg';
+                $loadQueue[0] = 0;
             }
 
             $data = [
@@ -179,7 +248,7 @@ class OfferController extends BaseController
             'message' => $message
         ];
         return response()->json($response,$status);
-    }
+    }*/
 
     public function addToInterest(Request $request){
         try {
@@ -327,7 +396,6 @@ class OfferController extends BaseController
     }
 
     public function nearByOffer(Request $request){
-
         try{
             $message = "Success";
             $status = 200;
@@ -408,7 +476,6 @@ class OfferController extends BaseController
     }
 
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
-
         try{
             $latitude = $origin['latitude'];
             $longitude = $origin['longitude'];
@@ -466,9 +533,7 @@ class OfferController extends BaseController
         }
     }
 
-
-    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2)
-    {
+    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2){
         try{
             // Calculate the distance in degrees using Hervasine formula
             $degrees = $this->calcDistance($origin, $destination);
@@ -498,7 +563,6 @@ class OfferController extends BaseController
             ];
             Log::critical(json_encode($data));
         }
-
     }
 
     protected function calcDistance($point1, $point2)
@@ -506,7 +570,7 @@ class OfferController extends BaseController
         try{
             return rad2deg(acos((sin(deg2rad($point1['latitude'])) *
                     sin(deg2rad($point2['latitude']))) +
-                (cos(deg2rad($point1['latitude'])) *
+                    (cos(deg2rad($point1['latitude'])) *
                     cos(deg2rad($point2['latitude'])) *
                     cos(deg2rad($point1['longitude'] - $point2['longitude'])))));
         }catch (\Exception $e){
@@ -525,7 +589,6 @@ class OfferController extends BaseController
 
     public function getDistanceByGoogleApi(Request $request){
         try{
-
             $origin = $request['origin'];
             $destination = $request['destination'];
 
