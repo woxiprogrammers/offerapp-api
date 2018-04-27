@@ -25,8 +25,7 @@ class CategoryController extends BaseController
         }
     }
 
-    public function getMainCategory()
-    {
+    public function getMainCategory(){
         try {
             $main_category = Category::whereNull('category_id')->get();
             $iterator = 0;

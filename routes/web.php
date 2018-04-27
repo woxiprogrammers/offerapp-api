@@ -62,20 +62,21 @@ $app->group(['prefix' => 'customer'], function () use($app){
 
 $app->group(['prefix' => 'seller'], function () use($app){
         $app->group(['prefix' => 'account'], function () use($app) {
-        $app->get('info',array('uses' => 'Seller\SellerController@getAccountInfo'));
-        $app->post('edit',array('uses' => 'Seller\SellerController@editAccountInfo'));
-    });
-        $app->group(['prefix' => 'address'], function ()use($app){
-        $app->group(['prefix' => 'floors'], function () use($app) {
-            $app->get('listing', array('uses' => 'Customer\OfferController@getFloor'));
+            $app->get('info',array('uses' => 'Seller\SellerController@getAccountInfo'));
+            $app->post('edit',array('uses' => 'Seller\SellerController@editAccountInfo'));
         });
-        $app->post('add',array('uses' => 'Seller\SellerController@addSellerAddress'));
-        $app->post('update',array('uses' => 'Seller\SellerController@updateSellerAddress'));
+        $app->group(['prefix' => 'address'], function ()use($app){
+            $app->group(['prefix' => 'floors'], function () use($app) {
+                $app->get('listing', array('uses' => 'Customer\OfferController@getFloor'));
+            });
+            $app->post('add',array('uses' => 'Seller\SellerController@addSellerAddress'));
+            $app->post('update',array('uses' => 'Seller\SellerController@updateSellerAddress'));
 
-    });
+        });
         $app->group(['prefix' => 'category'], function () use($app) {
-        $app->get('listing', array('uses' => 'Customer\OfferController@getCategory'));
-    });
+            $app->get('main', array('uses' => 'Seller\CategoryController@getMainCategory'));
+            $app->get('sub', array('uses' => 'Seller\CategoryController@getSubCategory'));
+         });
         $app->group(['prefix' => 'offer'], function () use($app){
             $app->get('type',array('uses' => 'Seller\OfferController@getOfferType'));
             $app->post('create', array('uses' => 'Seller\OfferController@createOffer'));
