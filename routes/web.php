@@ -89,6 +89,8 @@ $app->group(['prefix' => 'seller'], function () use($app){
             $app->post('detail', array('uses' => 'Seller\GroupController@getGroupDetail'));
             $app->post('offers', array('uses' => 'Seller\GroupController@groupOfferListing'));
             $app->post('create', array('uses' => 'Seller\GroupController@createGroup'));
+            $app->post('promote', array('uses' => 'Seller\GroupController@promoteOffer'));
+
         });
 });
 
