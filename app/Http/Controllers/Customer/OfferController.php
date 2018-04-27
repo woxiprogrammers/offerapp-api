@@ -137,18 +137,24 @@ class OfferController extends BaseController
             $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
             $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
             $offers['offerDescription'] = $offer->description;
+
             $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
             $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
                 ->where('offer_id',$offer['id'])
                 ->first();
-            $offers['addedToWishList'] = $customerOffer->is_wishlist;
+                if (count($customerOffer)>0){
+                    $offers['addedToWishList'] = $customerOffer->is_wishlist;
+                    $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
+                    if($offer_status == 'interested'){
+                        $offers['addedToInterested'] = true;
+                    }else{
+                        $offers['addedToInterested'] = false;
+                    }
+                }else{
+                    $offers['addedToWishList'] = false;
+                    $offers['addedToInterested'] = false;
+                }
 
-            $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
-            if($offer_status == 'interested'){
-                $offers['addedToInterested'] = true;
-            }else{
-                $offers['addedToInterested'] = false;
-            }
             $data = [
                 'offerDetail' => $offers,
                 'imageList' => $imageList,
