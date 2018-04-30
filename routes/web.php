@@ -75,7 +75,7 @@ $app->group(['prefix' => 'seller'], function () use($app){
         });
         $app->group(['prefix' => 'category'], function () use($app) {
             $app->get('main', array('uses' => 'Seller\CategoryController@getMainCategory'));
-            $app->get('sub', array('uses' => 'Seller\CategoryController@getSubCategory'));
+            $app->post('sub', array('uses' => 'Seller\CategoryController@getSubCategory'));
          });
         $app->group(['prefix' => 'offer'], function () use($app){
             $app->get('type',array('uses' => 'Seller\OfferController@getOfferType'));
@@ -89,6 +89,8 @@ $app->group(['prefix' => 'seller'], function () use($app){
             $app->post('detail', array('uses' => 'Seller\GroupController@getGroupDetail'));
             $app->post('offers', array('uses' => 'Seller\GroupController@groupOfferListing'));
             $app->post('create', array('uses' => 'Seller\GroupController@createGroup'));
+            $app->post('promote', array('uses' => 'Seller\GroupController@promoteOffer'));
+
         });
 });
 
