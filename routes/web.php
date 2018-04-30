@@ -75,7 +75,7 @@ $app->group(['prefix' => 'seller'], function () use($app){
         });
         $app->group(['prefix' => 'category'], function () use($app) {
             $app->get('main', array('uses' => 'Seller\CategoryController@getMainCategory'));
-            $app->get('sub', array('uses' => 'Seller\CategoryController@getSubCategory'));
+            $app->post('sub', array('uses' => 'Seller\CategoryController@getSubCategory'));
          });
         $app->group(['prefix' => 'offer'], function () use($app){
             $app->get('type',array('uses' => 'Seller\OfferController@getOfferType'));

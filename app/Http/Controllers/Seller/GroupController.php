@@ -228,17 +228,18 @@ class GroupController extends BaseController
         try{
             $user = Auth::user();
             $offer_id = $request['offer_id'];
-            $group_id = $request['group_id'];
 
             $role_id = User::where('id',$user->id)->pluck('role_id')->first();
+            foreach($request['group_id'] as $key => $groupId){
+                GroupMessage::create([
+                    'group_id' => $groupId,
+                    'role_id' => $role_id,
+                    'offer_id' => $offer_id,
+                    'reference_member_id' => $user->id
+                ]);
+            }
 
-            GroupMessage::create([
-                'group_id' => $group_id,
-                'role_id' => $role_id,
-                'offer_id' => $offer_id,
-                'reference_member_id' => $user->id
-            ]);
-            $message = 'Offer Promoted Succesfully';
+            $message = 'Offer Promoted Successfully';
             $status = 200;
         }catch (\Exception $e) {
             $message = "Fail";
