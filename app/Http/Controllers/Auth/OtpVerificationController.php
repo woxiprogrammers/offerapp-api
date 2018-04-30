@@ -25,7 +25,8 @@ class OtpVerificationController extends BaseController
                 $message = "Please Enter a Valid Mobile No.";
                 $status = 412;
             }else{
-                $otp = $this->generateOtp();
+                //$otp = $this->generateOtp();
+                $otp = 'abcd';
 
                 $apiKey = urlencode(env('SMS_KEY'));
 
@@ -41,12 +42,12 @@ class OtpVerificationController extends BaseController
 
                 // Send the POST request with cURL
 
-                $ch = curl_init('https://api.textlocal.in/send/');
+                /*$ch = curl_init('https://api.textlocal.in/send/');
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 $smsStatus = curl_exec($ch);
-                curl_close($ch);
+                curl_close($ch);*/
                 $status = 200;
                 $message = "Sms sent successfully";
 

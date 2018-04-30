@@ -223,4 +223,39 @@ class GroupController extends BaseController
         ];
         return response()->json($response, $status);
     }
+
+    public function promoteOffer(Request $request){
+        try{
+            $user = Auth::user();
+            $offer_id = $request['offer_id'];
+
+            $role_id = User::where('id',$user->id)->pluck('role_id')->first();
+            foreach($request['group_id'] as $key => $groupId){
+                GroupMessage::create([
+                    'group_id' => $groupId,
+                    'role_id' => $role_id,
+                    'offer_id' => $offer_id,
+                    'reference_member_id' => $user->id
+                ]);
+            }
+
+            $message = 'Offer Promoted Successfully';
+            $status = 200;
+        }catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Promote Offer',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'message' => $message,
+        ];
+        return response()->json($response, $status);
+    }
+
 }

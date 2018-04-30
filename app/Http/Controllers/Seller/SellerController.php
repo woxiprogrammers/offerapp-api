@@ -283,4 +283,6 @@ class SellerController extends BaseController
         return response()->json($response, $status);
     }
 
+
+
 }

@@ -25,8 +25,7 @@ class CategoryController extends BaseController
         }
     }
 
-    public function getMainCategory()
-    {
+    public function getMainCategory(){
         try {
             $main_category = Category::whereNull('category_id')->get();
             $iterator = 0;
@@ -65,12 +64,12 @@ class CategoryController extends BaseController
             $iterator = 0;
             $categoryList = array();
             foreach ($sub_category as $key => $category) {
-                $categoryList[$iterator]['category_id'] = $category['id'];
-                $categoryList[$iterator]['category_name'] = $category['name'];
-                $categoryList[$iterator]['category_slug'] = $category['slug'];
+                $categoryList[$iterator]['sub_category_id'] = $category['id'];
+                $categoryList[$iterator]['sub_category_name'] = $category['name'];
+                $categoryList[$iterator]['sub_category_slug'] = $category['slug'];
                 $iterator++;
             }
-            $data['select_category_type'] = $categoryList;
+            $data['select_sub_category_type'] = $categoryList;
             $message = 'Success';
             $status = 200;
         }catch (\Exception $e) {
