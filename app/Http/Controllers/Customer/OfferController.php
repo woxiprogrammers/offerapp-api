@@ -182,7 +182,9 @@ class OfferController extends BaseController
             $message = 'success';
             $status = 200;
             $data = array();
-            $sorted_offers = array();
+            $offerId = array();
+            $imageList = array();
+            $loadQueue = array();
             $user = Auth::user();
             $user_id = $user['id'];
             $currentPage = Input::get('page', 1)-1;
@@ -191,19 +193,22 @@ class OfferController extends BaseController
             $origin = $request['coords'];
             $radius = 1;
             $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
-            foreach ($offers as $key => $offer){
-                $offerId[$key] = $offer->id;
-                $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
-                $sha1OfferId = sha1($offerId[$key]);
-                $offerImages = $offer->offerImages->first();
-                if(count($offerImages) > 0){
-                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->name;
-                    $loadQueue[$key] = 0;
-                }else{
-                    $imageList[0] = '/uploads/no_image.jpg';
-                    $loadQueue[0] = 0;
+            if(isset($offers)){
+                foreach ($offers as $key => $offer){
+                    $offerId[$key] = $offer->id;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offerId[$key]);
+                    $offerImages = $offer->offerImages->first();
+                    if(count($offerImages) > 0){
+                        $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->name;
+                        $loadQueue[$key] = 0;
+                    }else{
+                        $imageList[0] = '/uploads/no_image.jpg';
+                        $loadQueue[0] = 0;
+                    }
                 }
             }
+
 
             $data = [
                 'offerId' => $offerId,
