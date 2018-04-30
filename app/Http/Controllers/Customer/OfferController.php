@@ -177,73 +177,47 @@ class OfferController extends BaseController
         return response()->json($response,$status);
     }
 
-    /*public function getInterestedOfferDetail(Request $request){
+    public function swipperOffer(Request $request){
         try{
-            $message = "Success";
+            $message = 'success';
             $status = 200;
             $data = array();
-            $user = Auth::user();
-            $user_id = $user['id'];
-            $offer_id = $request['offerId'];
-
-            $offers = array();
+            $offerId = array();
             $imageList = array();
             $loadQueue = array();
-
-            $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
-
-            $customer_offer = CustomerOfferDetail::where('customer_id',$customer_id)
-                ->where('offer_id',$offer_id)
-                ->first();
-            $offer = $customer_offer->offer;
-            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
-            $sha1OfferId = sha1($offer['id']);
-            $offers['offerId'] = $offer->id;
-            $offers['offerName'] = $offer->offerType->name;
-            $offerImages = $customer_offer->offer->offerImages;
-            if(count($offerImages) > 0){
-                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
-            }else{
-                $offers['offerPic'] = '/uploads/no_image.jpg';
-            }
-
-            $seller = $offer->sellerAddress->seller;
-            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
-            $valid_to = $offer->valid_to;
-            $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
-            $offers['sellerNumber'] = $offer->sellerAddress->landline;
-            $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
-            $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
-            $offers['offerDescription'] = $offer->description;
-            $offers['addedToWishList'] = $customer_offer->is_wishlist;
-
-            $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
-            if($offer_status == 'interested'){
-                $offers['addedToInterested'] = true;
-            }else{
-                $offers['addedToInterested'] = false;
-            }
-            $images = OfferImage::where('offer_id',$offer_id)->get();
-            if(count($images) > 0){
-                foreach($images as $key => $image){
-                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
-                    $loadQueue[$key] = 0;
+            $user = Auth::user();
+            $user_id = $user['id'];
+            $currentPage = Input::get('page', 1)-1;
+            $customer_offer_type_slug = $request['offerTypeSlug'];
+            $customer_category_id = 0;
+            $origin = $request['coords'];
+            $radius = 1;
+            $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
+            if(isset($offers)){
+                foreach ($offers as $key => $offer){
+                    $offerId[$key] = $offer->id;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offerId[$key]);
+                    $offerImages = $offer->offerImages->first();
+                    if(count($offerImages) > 0){
+                        $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->name;
+                        $loadQueue[$key] = 0;
+                    }else{
+                        $imageList[0] = '/uploads/no_image.jpg';
+                        $loadQueue[0] = 0;
+                    }
                 }
-            }else{
-                $imageList[0] = '/uploads/no_image.jpg';
-                $loadQueue[0] = 0;
             }
-
             $data = [
-                'offerDetail' => $offers,
-                'imageList' => $imageList,
-                'loadQueue' => $loadQueue
+                'offerId' => $offerId,
+                'offerList' => $imageList,
+                'loadQueue' => $loadQueue,
             ];
         }catch(\Exception $e){
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Get Interested Offer Detail ',
+                'action' => 'Swipper Offers',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
@@ -254,7 +228,7 @@ class OfferController extends BaseController
             'message' => $message
         ];
         return response()->json($response,$status);
-    }*/
+    }
 
     public function addToInterest(Request $request){
         try {
@@ -412,9 +386,17 @@ class OfferController extends BaseController
             $sort_by = $request['sortSelected'];
             $currentPage = Input::get('page', 1)-1;
             $customer_offer_type_slug = $request['offerTypeSlug'];
-            $customer_category_id = $request['categorySelected'];
+            if ($request['categorySelected'] > 0){
+                $customer_category_id = $request['categorySelected'];
+            }else{
+                $customer_category_id = 0;
+            }
             $origin = $request['coords'];
-            $radius = $request['distance'];
+            if ($request['distance'] > 0){
+                $radius = $request['distance'];
+            }else{
+                $radius = 1;
+            }
             $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
             if($sort_by == 'latestFirst'){
                 $sort_by_latest = array();
@@ -486,7 +468,6 @@ class OfferController extends BaseController
             $latitude = $origin['latitude'];
             $longitude = $origin['longitude'];
             $earth_radius = 6371;
-            $category_id = $customer_category_id;
             $maxLat = $latitude + rad2deg($radius/$earth_radius);
             $minLat = $latitude - rad2deg($radius/$earth_radius);
             $maxLon = $longitude + rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
@@ -501,6 +482,7 @@ class OfferController extends BaseController
             $offers = Offer::whereIn('seller_address_id', $near_by_seller_addresses)
                             ->get();
 
+            if($customer_category_id > 0){
                 $category_id = Category::where('id',$customer_category_id)
                     ->pluck('category_id')->first();
                 if(isset($category_id)){
@@ -522,6 +504,10 @@ class OfferController extends BaseController
                     $sort_by_offers_type = $sort_by_category;
                 }
                 $near_by_offers = $sort_by_offers_type;
+            }else{
+
+                $near_by_offers = $offers;
+            }
 
             return $near_by_offers;
 

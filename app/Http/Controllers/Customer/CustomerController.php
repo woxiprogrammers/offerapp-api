@@ -88,7 +88,7 @@ class CustomerController extends BaseController
                 'locationName' => $address,
                 'coords' => [
                     'latitude' => $latitude,
-                    'lonitude' => $longitude
+                    'longitude' => $longitude
                 ],
                 'status' => 200
             ];
