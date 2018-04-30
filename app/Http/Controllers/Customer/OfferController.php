@@ -208,8 +208,6 @@ class OfferController extends BaseController
                     }
                 }
             }
-
-
             $data = [
                 'offerId' => $offerId,
                 'offerList' => $imageList,
@@ -485,7 +483,6 @@ class OfferController extends BaseController
                             ->get();
 
             if($customer_category_id > 0){
-                dd(321);
                 $category_id = Category::where('id',$customer_category_id)
                     ->pluck('category_id')->first();
                 if(isset($category_id)){
