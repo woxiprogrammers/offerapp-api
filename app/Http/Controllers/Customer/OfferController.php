@@ -547,6 +547,60 @@ class OfferController extends BaseController
         return response()->json($response,$status);
     }
 
+    public function AROffers(Request $request){
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $origin = $request['coords'];
+            $radius = $request['distance'];
+            $offerTypeSlug = $request['offerTypeSlug'];
+            $seller_addresses = array();
+            $seller_address_id = array();
+            $seller_info = array();
+            $offers = $this->offerWithinBoundingCircle($origin, $offerTypeSlug, 0, $radius);
+            if(count($offers)>0){
+                foreach ($offers as $key => $offer){
+                    $seller_addresses[$key] = $offer->sellerAddress;
+                    $seller_address_id[$key]['id'] = $offer->sellerAddress->id;
+                }
+                $seller_addresses = collect($seller_addresses);
+                $seller_addresses = $seller_addresses->unique('id');
+                $seller_addresses->values()->all()->to;
+                foreach ($seller_addresses as $key => $seller_address){
+
+                    $seller_info[$key]['sellerAddressId'] = $seller_address->id;
+                    $seller_info[$key]['sellerInfo'] = $seller_address->shop_name.', '.$seller_address->address;
+                    $seller_info[$key]['latitude'] = $seller_address->latitude;
+                    $seller_info[$key]['longitude'] = $seller_address->longitude;
+                    $offerCount = collect($seller_address_id)->where('id',$seller_address->id)->count();
+                    $seller_info[$key]['offerCount'] = $offerCount;
+                    $seller_info[$key]['floorId'] = $seller_address->floor_id;
+                }
+
+            }else{
+                $message = "There No offer in your nearby";
+            }
+            $data = [
+                'records' => $seller_info
+            ];
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'AR Seller Info',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
 
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
         try{
