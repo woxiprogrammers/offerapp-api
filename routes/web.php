@@ -66,8 +66,8 @@ $app->group(['prefix' => 'customer'], function () use($app){
         });
 
         $app->group(['prefix' => 'AR'], function () use($app) {
-            $app->post('seller_info', array('uses' => 'Customer\OfferController@AROffers'));
-            $app->get('listing', array('uses' => 'Customer\OfferController@getReachInTime'));
+            $app->post('seller_info', array('uses' => 'Customer\OfferController@ARSellerInfo'));
+            $app->post('listing', array('uses' => 'Customer\OfferController@AROffers'));
         });
     });
 

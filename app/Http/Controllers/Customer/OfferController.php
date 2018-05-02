@@ -187,7 +187,6 @@ class OfferController extends BaseController
             $loadQueue = array();
             $user = Auth::user();
             $user_id = $user['id'];
-            $currentPage = Input::get('page', 1)-1;
             $customer_offer_type_slug = $request['offerTypeSlug'];
             $customer_category_id = 0;
             $origin = $request['coords'];
@@ -203,8 +202,8 @@ class OfferController extends BaseController
                         $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->name;
                         $loadQueue[$key] = 0;
                     }else{
-                        $imageList[0] = '/uploads/no_image.jpg';
-                        $loadQueue[0] = 0;
+                        $imageList[$key] = '/uploads/no_image.jpg';
+                        $loadQueue[$key] = 0;
                     }
                 }
             }
@@ -437,7 +436,7 @@ class OfferController extends BaseController
             $data = [
                 'records' => $pagedData,
                 'pagination' => [
-                    'page' => $currentPage +1 ,
+                    'page' => $currentPage + 1,
                     'perPage' => $this->perPage,
                     'pageCount' => count($pagedData),
                     'totalCount' => count($near_by_offers),
@@ -547,7 +546,7 @@ class OfferController extends BaseController
         return response()->json($response,$status);
     }
 
-    public function AROffers(Request $request){
+    public function ARSellerInfo(Request $request){
         try{
             $message = "Success";
             $status = 200;
@@ -565,12 +564,10 @@ class OfferController extends BaseController
                     $seller_address_id[$key]['id'] = $offer->sellerAddress->id;
                 }
                 $seller_addresses = collect($seller_addresses);
-                $seller_addresses = $seller_addresses->unique('id');
-                $seller_addresses->values()->all()->to;
+                $seller_addresses = $seller_addresses->unique('id')->values()->all();
                 foreach ($seller_addresses as $key => $seller_address){
-
                     $seller_info[$key]['sellerAddressId'] = $seller_address->id;
-                    $seller_info[$key]['sellerInfo'] = $seller_address->shop_name.', '.$seller_address->address;
+                    $seller_info[$key]['sellerInfo'] = $seller_address->shop_name.''.$seller_address->address;
                     $seller_info[$key]['latitude'] = $seller_address->latitude;
                     $seller_info[$key]['longitude'] = $seller_address->longitude;
                     $offerCount = collect($seller_address_id)->where('id',$seller_address->id)->count();
@@ -590,6 +587,75 @@ class OfferController extends BaseController
             $data = [
                 'parameter' => $request->all(),
                 'action' => 'AR Seller Info',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
+    public function AROffers(Request $request){
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $nearByOffers = array();
+            $currentPage = Input::get('page', 1)-1;
+            $seller_address_id = $request['sellerAddressId'];
+            $offerTypeSlug = $request['offerTypeSlug'];
+
+            if($offerTypeSlug == 'all'){
+                $offers = Offer::where('seller_address_id', $seller_address_id)->get();
+
+            }else{
+                $offer_type_id = OfferType::where('slug', $offerTypeSlug)->pluck('id')->first();
+                $offers = Offer::where('seller_address_id', $seller_address_id)
+                    ->where('offer_type_id', $offer_type_id)->get();
+            }
+            if(count($offers)>0){
+                foreach ($offers as $key => $offer){
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer['id']);
+                    $nearByOffers[$key]['offerId'] = $offer->id;
+                    $nearByOffers[$key]['offerName'] = $offer->offerType->name;
+                    $offerImages = $offer->offerImages;
+                    if(count($offerImages) > 0){
+                        $nearByOffers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
+
+                    }else{
+                        $nearByOffers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    }
+                    $seller = $offer->sellerAddress->seller;
+                    $nearByOffers[$key]['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+                    $valid_to = $offer->valid_to;
+                    $nearByOffers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
+                }
+
+            }else{
+                $message = "There No offer in your nearby";
+            }
+            $pagedData = array_slice($nearByOffers, $currentPage * $this->perPage, $this->perPage);
+
+            $data = [
+                'records' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage + 1,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($offers),
+                ],
+            ];
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'AR Offer Detail',
                 'errorMessage' => $e->getMessage()
             ];
             Log::critical(json_encode($data));
