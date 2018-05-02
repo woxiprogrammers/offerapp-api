@@ -533,7 +533,7 @@ class OfferController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'parameter' => $request,
+                'parameter' => $request->all(),
                 'action' => 'mapOffers',
                 'errorMessage' => $e->getMessage()
             ];
@@ -546,34 +546,7 @@ class OfferController extends BaseController
         ];
         return response()->json($response,$status);
     }
-
-    public function AROffers(Request $request){
-        try{
-            $origin = $request['coords'];
-            $latitude = $origin['latitude'];
-            $longitude = $origin['longitude'];
-            $radius = $request['distance'];
-            $earth_radius = 6371;
-            $offerTypeSlug = $request['offerTypeSlug'];
-            $maxLat = $latitude + rad2deg($radius/$earth_radius);
-            $minLat = $latitude - rad2deg($radius/$earth_radius);
-            $maxLon = $longitude + rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
-            $minLon = $longitude - rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
-
-            $near_by_seller_addresses = SellerAddress::select('id','zipcode', 'latitude', 'longitude')
-                ->whereBetween('latitude', [$minLat, $maxLat])
-                ->whereBetween('longitude', [$minLon, $maxLon])
-                ->get();
-
-            foreach ($near_by_seller_addresses as $key => $near_by_seller_address){
-                $seller_offer = $near_by_seller_address->offer;
-                return $seller_offer;
-            }
-
-        }catch(\Exception $e){
-
-        }
-    }
+    
 
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
         try{
