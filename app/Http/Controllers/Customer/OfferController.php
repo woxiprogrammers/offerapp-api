@@ -210,7 +210,7 @@ class OfferController extends BaseController
             }
             $data = [
                 'offerId' => $offerId,
-                'offerList' => $imageList,
+                'imageList' => $imageList,
                 'loadQueue' => $loadQueue,
             ];
         }catch(\Exception $e){
