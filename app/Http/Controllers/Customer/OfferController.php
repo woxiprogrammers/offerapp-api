@@ -546,7 +546,7 @@ class OfferController extends BaseController
         ];
         return response()->json($response,$status);
     }
-    
+
 
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
         try{
