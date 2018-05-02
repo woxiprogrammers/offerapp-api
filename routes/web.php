@@ -25,6 +25,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
         $app->post('get',array('uses' => 'Customer\CustomerController@getLocation'));
         $app->post('set',array('uses' => 'Customer\CustomerController@setLocation'));
     });
+
     $app->group(['prefix' => 'offer'], function () use($app){
         $app->post('detail',array('uses' => 'Customer\OfferController@getCustomerOfferDetail'));
 
@@ -59,7 +60,13 @@ $app->group(['prefix' => 'customer'], function () use($app){
             $app->post('add',array('uses' => 'Customer\OfferController@addToInterest'));
 
         });
+
+        $app->group(['prefix' => 'map'], function () use($app) {
+            $app->post('listing',array('uses' => 'Customer\OfferController@mapOffers'));
+        });
+        
     });
+
     $app->group(['prefix' => 'group'], function () use($app){
         $app->get('list',array('uses' => 'Customer\GroupController@getGroupList'));
         $app->post('offers',array('uses' => 'Customer\GroupController@getGroupOffers'));
