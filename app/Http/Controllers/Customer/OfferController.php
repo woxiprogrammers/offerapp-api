@@ -463,8 +463,121 @@ class OfferController extends BaseController
 
     }
 
+    public function mapOffers(Request $request)
+    {
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $markers = array();
+            $near_by_offers = array();
+            $sorted_offers = array();
+            $mapOffers = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
+            $currentPage = Input::get('page', 1)-1;
+            $customer_offer_type_slug = $request['offerTypeSlug'];
+            $customer_category_id = $request['categorySelected'];
+            $origin = $request['coords'];
+            $radius = $request['distance'];
+
+            $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
+            if(count($offers) > 0){
+                foreach ($offers as $key => $offer){
+                    $seller_user = $offer->sellerAddress->seller->user;
+                    $sorted_offers[$key]['offerId'] = $offer->id;
+                    $sorted_offers[$key]['offerName'] = $offer->offerType->name;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer->id);
+                    if(count($offer->offerImages) > 0){
+                        $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                    }else{
+                        $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    }
+                    $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
+                    $valid_to = $offer->valid_to;
+                    $sorted_offers[$key]['offerExpiry'] = date('d F, Y',strtotime($valid_to));
+                    $destination['latitude'] = $offer->sellerAddress->latitude;
+                    $destination['longitude'] = $offer->sellerAddress->longitude;
+                    $sorted_offers[$key]['coordinate'] = $destination;
+                    $distance = $this->getDistanceBetween($origin, $destination);
+                    $sorted_offers[$key]['distance'] = $distance;
+                }
+
+                $near_by_offers = collect($sorted_offers)->sortBy('distance')->values()->all();
+                $pagedData = array_slice($near_by_offers, $currentPage * $this->perPage, $this->perPage);
+                foreach ($pagedData as $key => $data){
+                    $mapOffers[$key]['offerId'] = $data['offerId'];
+                    $mapOffers[$key]['offerName'] = $data['offerName'];
+                    $mapOffers[$key]['offerPic'] = $data['offerPic'];
+                    $mapOffers[$key]['sellerInfo'] = $data['sellerInfo'];
+                    $mapOffers[$key]['offerExpiry'] = $data['offerExpiry'];
+                    $mapOffers[$key]['distance'] = $data['distance'];
+                    $markers[$key]['offerId'] = $data['offerId'];
+                    $markers[$key]['coordinate'] = $data['coordinate'];
+                    $markers[$key]['key'] = $key;
+                }
+            }
+            $data = [
+                'records' => $mapOffers,
+                'markers' => $markers,
+                'pagination' => [
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($mapOffers),
+                    'totalCount' => count($near_by_offers),
+                ],
+            ];
+
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request,
+                'action' => 'mapOffers',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
+    public function AROffers(Request $request){
+        try{
+            $origin = $request['coords'];
+            $latitude = $origin['latitude'];
+            $longitude = $origin['longitude'];
+            $radius = $request['distance'];
+            $earth_radius = 6371;
+            $offerTypeSlug = $request['offerTypeSlug'];
+            $maxLat = $latitude + rad2deg($radius/$earth_radius);
+            $minLat = $latitude - rad2deg($radius/$earth_radius);
+            $maxLon = $longitude + rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
+            $minLon = $longitude - rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
+
+            $near_by_seller_addresses = SellerAddress::select('id','zipcode', 'latitude', 'longitude')
+                ->whereBetween('latitude', [$minLat, $maxLat])
+                ->whereBetween('longitude', [$minLon, $maxLon])
+                ->get();
+
+            foreach ($near_by_seller_addresses as $key => $near_by_seller_address){
+                $seller_offer = $near_by_seller_address->offer;
+                return $seller_offer;
+            }
+
+        }catch(\Exception $e){
+
+        }
+    }
+
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
         try{
+            $near_by_offers = array();
             $latitude = $origin['latitude'];
             $longitude = $origin['longitude'];
             $earth_radius = 6371;
@@ -477,7 +590,6 @@ class OfferController extends BaseController
                 ->whereBetween('latitude', [$minLat, $maxLat])
                 ->whereBetween('longitude', [$minLon, $maxLon])
                 ->pluck('id')->all();
-            $near_by_offers = array();
 
             $offers = Offer::whereIn('seller_address_id', $near_by_seller_addresses)
                             ->get();
