@@ -491,7 +491,7 @@ class OfferController extends BaseController
                     if(count($offer->offerImages) > 0){
                         $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
                     }else{
-                        $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                        $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                     }
                     $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                     $valid_to = $offer->valid_to;
@@ -514,7 +514,7 @@ class OfferController extends BaseController
                     $mapOffers[$key]['distance'] = $data['distance'];
                     $markers[$key]['offerId'] = $data['offerId'];
                     $markers[$key]['coordinate'] = $data['coordinate'];
-                    $markers[$key]['key'] = $key;
+                    $markers[$key]['key'] = $data['offerId'];
                 }
             }
             $data = [
