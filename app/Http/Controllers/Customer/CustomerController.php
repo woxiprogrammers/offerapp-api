@@ -8,6 +8,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Http\Controllers\CustomTraits\UserTrait;
 use Cornford\Googlmapper\Facades\MapperFacade as Mapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class CustomerController extends BaseController
 {
+    use UserTrait;
     public function __construct(){
         $this->middleware('jwt.auth');
         if(!Auth::guest()) {

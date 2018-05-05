@@ -424,7 +424,7 @@ class OfferController extends BaseController
                 if(count($customer_offer->offerImages) > 0){
                     $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offerImages->first()->name;
                 }else{
-                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                 }
                 $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                 $valid_to = $customer_offer->valid_to;
@@ -809,6 +809,38 @@ class OfferController extends BaseController
         return $data;
     }
 
+    public function getGrabCode(Request $request){
+        try{
+            $status = 200;
+            $data = array();
+            $offerId = $request['offerId'];
+            $grabCode = CustomerOfferDetail::where('offer_id', $offerId)->pluck('offer_code')->first();
+            if(count($grabCode)>0){
+                $message = 'Success';
+            }else{
+                $grabCode = '';
+                $message = 'Grab Code Not Found';
+            }
+            $data = [
+                'grabCode' => $grabCode,
+            ];
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'Get Grab Code',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response, $status);
+    }
 
 
 }
