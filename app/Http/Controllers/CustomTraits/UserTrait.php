@@ -85,18 +85,19 @@ trait UserTrait{
 
             $user = Auth::user();
             if($request['credentialSlug'] == 'mobile_no'){
-                $message = 'Mobile No Updated Successfully';
+
                 $newMobileNo = $request['mobileNo'];
                 $user->update([
                     'mobile_no' => $newMobileNo
                 ]);
+                $message = 'Mobile No Updated Successfully';
                 JWTAuth::invalidate($request['token']);
             }else{
-                $message = 'Password Updated Successfully';
                 $newPassword = $request['password'];
                 $user->update([
                     'password' => Hash::make($newPassword)
                 ]);
+                $message = 'Password Updated Successfully';
             }
             $data = [
                 'userData' => $user

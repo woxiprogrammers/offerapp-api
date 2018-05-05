@@ -96,11 +96,11 @@ class LoginController extends BaseController
         try{
             $user = User::where('mobile_no', $request['mobile_no'])->first();
             if(count($user)>0){
-                $message = "Password Changed Successfully";
-                $status = 200;
                 $user->update([
                     'password' => Hash::make($request['password'])
                 ]);
+                $message = "Password Changed Successfully";
+                $status = 200;
             }else{
                 $message = "Please Enter a Valid Mobile No.!!";
                 $status = 401;
