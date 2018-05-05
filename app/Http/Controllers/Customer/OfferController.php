@@ -484,6 +484,7 @@ class OfferController extends BaseController
             if(count($offers) > 0){
                 foreach ($offers as $key => $offer){
                     $seller_user = $offer->sellerAddress->seller->user;
+                    $sellerAddress = $offer->sellerAddress;
                     $sorted_offers[$key]['offerId'] = $offer->id;
                     $sorted_offers[$key]['offerName'] = $offer->offerType->name;
                     $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
@@ -493,14 +494,15 @@ class OfferController extends BaseController
                     }else{
                         $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                     }
+                    $sorted_offers[$key]['offerAddress'] = $sellerAddress->shop_name.$sellerAddress->address;
                     $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                     $valid_to = $offer->valid_to;
                     $sorted_offers[$key]['offerExpiry'] = date('d F, Y',strtotime($valid_to));
-                    $destination['latitude'] = $offer->sellerAddress->latitude;
-                    $destination['longitude'] = $offer->sellerAddress->longitude;
+                    $destination['latitude'] = $sellerAddress->latitude;
+                    $destination['longitude'] = $sellerAddress->longitude;
                     $sorted_offers[$key]['coordinate'] = $destination;
                     $distance = $this->getDistanceBetween($origin, $destination);
-                    $sorted_offers[$key]['distance'] = $distance;
+                    $sorted_offers[$key]['offerDistance'] = $distance;
                 }
 
                 $near_by_offers = collect($sorted_offers)->sortBy('distance')->values()->all();
@@ -509,9 +511,10 @@ class OfferController extends BaseController
                     $mapOffers[$key]['offerId'] = $data['offerId'];
                     $mapOffers[$key]['offerName'] = $data['offerName'];
                     $mapOffers[$key]['offerPic'] = $data['offerPic'];
+                    $mapOffers[$key]['offerAddress'] = $data['offerAddress'];
                     $mapOffers[$key]['sellerInfo'] = $data['sellerInfo'];
                     $mapOffers[$key]['offerExpiry'] = $data['offerExpiry'];
-                    $mapOffers[$key]['distance'] = $data['distance'];
+                    $mapOffers[$key]['offerDistance'] = $data['offerDistance'];
                     $markers[$key]['offerId'] = $data['offerId'];
                     $markers[$key]['coordinate'] = $data['coordinate'];
                     $markers[$key]['key'] = $data['offerId'];
