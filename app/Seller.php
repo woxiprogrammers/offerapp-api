@@ -9,7 +9,7 @@ class Seller extends Model
     protected $table = 'sellers';
 
     protected $fillable = [
-        'id','user_id'
+        'user_id'
     ];
 
     public function user(){
