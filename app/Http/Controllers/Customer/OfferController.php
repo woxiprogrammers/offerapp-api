@@ -424,7 +424,7 @@ class OfferController extends BaseController
                 if(count($customer_offer->offerImages) > 0){
                     $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offerImages->first()->name;
                 }else{
-                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                 }
                 $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                 $valid_to = $customer_offer->valid_to;
@@ -484,6 +484,7 @@ class OfferController extends BaseController
             if(count($offers) > 0){
                 foreach ($offers as $key => $offer){
                     $seller_user = $offer->sellerAddress->seller->user;
+                    $sellerAddress = $offer->sellerAddress;
                     $sorted_offers[$key]['offerId'] = $offer->id;
                     $sorted_offers[$key]['offerName'] = $offer->offerType->name;
                     $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
@@ -491,16 +492,17 @@ class OfferController extends BaseController
                     if(count($offer->offerImages) > 0){
                         $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
                     }else{
-                        $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                        $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                     }
+                    $sorted_offers[$key]['offerAddress'] = $sellerAddress->shop_name.$sellerAddress->address;
                     $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                     $valid_to = $offer->valid_to;
                     $sorted_offers[$key]['offerExpiry'] = date('d F, Y',strtotime($valid_to));
-                    $destination['latitude'] = $offer->sellerAddress->latitude;
-                    $destination['longitude'] = $offer->sellerAddress->longitude;
+                    $destination['latitude'] = $sellerAddress->latitude;
+                    $destination['longitude'] = $sellerAddress->longitude;
                     $sorted_offers[$key]['coordinate'] = $destination;
                     $distance = $this->getDistanceBetween($origin, $destination);
-                    $sorted_offers[$key]['distance'] = $distance;
+                    $sorted_offers[$key]['offerDistance'] = $distance;
                 }
 
                 $near_by_offers = collect($sorted_offers)->sortBy('distance')->values()->all();
@@ -509,12 +511,13 @@ class OfferController extends BaseController
                     $mapOffers[$key]['offerId'] = $data['offerId'];
                     $mapOffers[$key]['offerName'] = $data['offerName'];
                     $mapOffers[$key]['offerPic'] = $data['offerPic'];
+                    $mapOffers[$key]['offerAddress'] = $data['offerAddress'];
                     $mapOffers[$key]['sellerInfo'] = $data['sellerInfo'];
                     $mapOffers[$key]['offerExpiry'] = $data['offerExpiry'];
-                    $mapOffers[$key]['distance'] = $data['distance'];
+                    $mapOffers[$key]['offerDistance'] = $data['offerDistance'];
                     $markers[$key]['offerId'] = $data['offerId'];
                     $markers[$key]['coordinate'] = $data['coordinate'];
-                    $markers[$key]['key'] = $key;
+                    $markers[$key]['key'] = $data['offerId'];
                 }
             }
             $data = [
@@ -730,7 +733,7 @@ class OfferController extends BaseController
         }
     }
 
-    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2){
+    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 1){
         try{
             // Calculate the distance in degrees using Hervasine formula
             $degrees = $this->calcDistance($origin, $destination);
@@ -748,7 +751,7 @@ class OfferController extends BaseController
                     // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
                     $distance = $degrees * 59.97662;
             }
-            return $distance;
+            return number_format($distance, $decimals);
         }catch (\Exception $e ){
             $data = [
                 'action' => 'get Distance Between Origin And Destination',
@@ -809,6 +812,38 @@ class OfferController extends BaseController
         return $data;
     }
 
+    public function getGrabCode(Request $request){
+        try{
+            $status = 200;
+            $data = array();
+            $offerId = $request['offerId'];
+            $grabCode = CustomerOfferDetail::where('offer_id', $offerId)->pluck('offer_code')->first();
+            if(count($grabCode)>0){
+                $message = 'Success';
+            }else{
+                $grabCode = '';
+                $message = 'Grab Code Not Found';
+            }
+            $data = [
+                'grabCode' => $grabCode,
+            ];
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'Get Grab Code',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response, $status);
+    }
 
 
 }
