@@ -73,7 +73,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
             $app->post('listing',array('uses' => 'Customer\OfferController@mapOffers'));
         });
 
-        $app->group(['prefix' => 'ar'], function () use($app) {
+        $app->group(['prefix' => 'augmented_reality'], function () use($app) {
             $app->post('seller_info', array('uses' => 'Customer\OfferController@ARSellerInfo'));
             $app->post('listing', array('uses' => 'Customer\OfferController@AROffers'));
         });

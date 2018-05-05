@@ -32,7 +32,7 @@ trait UserTrait{
                 'email' => $userData['Email'],
             ]);
 
-            if($request->has('ProfilePicBase64')){
+            /*if($request->has('ProfilePicBase64')){
                 $image = base64_decode($request['ProfilePicBase64']);
                 $filename = $user->profile_picture;
                 if($user->role->slug == 'seller'){
@@ -57,10 +57,14 @@ trait UserTrait{
                 $user->update([
                     'profile_picture' => $filename
                 ]);
-            }
-            $data = [
-                'path' => $path
-            ];
+            }*/
+            $data['userData']['firstName'] = $user['first_name'];
+            $data['userData']['lastName'] = $user['last_name'];
+            $data['userData']['email'] = $user['email'];
+            $data['userData']['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
+            $data['userData']['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $path;
+            $message = "Profile Updated in successfully!!";
+            $status = 200;
 
         }catch (\Exception $e){
             $data = [
