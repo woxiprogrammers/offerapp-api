@@ -8,7 +8,9 @@ class Seller extends Model
 {
     protected $table = 'sellers';
 
-    protected $fillable = ['user_id'];
+    protected $fillable = [
+        'id','user_id'
+    ];
 
     public function user(){
         return $this->belongsTo('App\User','user_id');
