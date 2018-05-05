@@ -32,7 +32,7 @@ trait UserTrait{
                 'email' => $userData['Email'],
             ]);
 
-            /*if($request->has('ProfilePicBase64')){
+            if($request->has('ProfilePicBase64')){
                 $image = base64_decode($request['ProfilePicBase64']);
                 $filename = $user->profile_picture;
                 if($user->role->slug == 'seller'){
@@ -57,7 +57,7 @@ trait UserTrait{
                 $user->update([
                     'profile_picture' => $filename
                 ]);
-            }*/
+            }
             $data['userData']['firstName'] = $user['first_name'];
             $data['userData']['lastName'] = $user['last_name'];
             $data['userData']['email'] = $user['email'];
