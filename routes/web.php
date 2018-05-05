@@ -63,11 +63,9 @@ $app->group(['prefix' => 'customer'], function () use($app){
             $app->post('remove',array('uses' => 'Customer\OfferController@removeFromWishlist'));
         });
         $app->group(['prefix' => 'interested'], function () use($app){
-
-            $app->post('listing',array('uses' => 'Customer\OfferController@offerListing'));
-            //$app->post('detail',array('uses' => 'Customer\OfferController@getInterestedOfferDetail'));
-
             $app->post('add',array('uses' => 'Customer\OfferController@addToInterest'));
+            $app->post('listing',array('uses' => 'Customer\OfferController@offerListing'));
+            $app->post('grabcode',array('uses' => 'Customer\OfferController@getGrabCode'));
 
         });
 

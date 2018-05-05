@@ -809,6 +809,37 @@ class OfferController extends BaseController
         return $data;
     }
 
-
+    public function getGrabCode(Request $request){
+        try{
+            $status = 200;
+            $data = array();
+            $offerId = $request['offerId'];
+            $grabCode = CustomerOfferDetail::where('offer_id', $offerId)->pluck('offer_code')->first();
+            if(count($grabCode)>0){
+                $message = 'Success';
+            }else{
+                $grabCode = '';
+                $message = 'Grab Code Not Found';
+            }
+            $data = [
+                'grabCode' => $grabCode,
+            ];
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'Get Grab Code',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response, $status);
+    }
 
 }
