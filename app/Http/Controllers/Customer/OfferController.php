@@ -730,7 +730,7 @@ class OfferController extends BaseController
         }
     }
 
-    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2){
+    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 1){
         try{
             // Calculate the distance in degrees using Hervasine formula
             $degrees = $this->calcDistance($origin, $destination);
@@ -748,7 +748,7 @@ class OfferController extends BaseController
                     // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
                     $distance = $degrees * 59.97662;
             }
-            return $distance;
+            return number_format($distance, $decimals);
         }catch (\Exception $e ){
             $data = [
                 'action' => 'get Distance Between Origin And Destination',
