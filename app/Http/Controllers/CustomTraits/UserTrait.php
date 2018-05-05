@@ -27,22 +27,21 @@ trait UserTrait{
             $data = array();
             $user = Auth::user();
             $user->update([
-                'first_name' => $userData['peFirstName'],
-                'last_name' => $userData['peLastName'],
-                'email' => $userData['peEmail'],
+                'first_name' => $userData['FirstName'],
+                'last_name' => $userData['LastName'],
+                'email' => $userData['Email'],
             ]);
 
-            if($request->has('peProfilePicBase64')){
-                $image = base64_decode($request['peProfilePicBase64']);
-                $sha1UserId = sha1($user['id']);
+            if($request->has('ProfilePicBase64')){
+                $image = base64_decode($request['ProfilePicBase64']);
                 $filename = $user->profile_picture;
                 if($user->role->slug == 'seller'){
                     $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
 
                 }else{
                     $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
 
                 }
                 //DELETES EXISTING
@@ -54,7 +53,7 @@ trait UserTrait{
                 File::makeDirectory($imageUploadPath, $mode = 0777, true, true);
                 $filename = mt_rand(1,10000000000).sha1(time()).".jpg";
                 file_put_contents($imageUploadPath.$filename, $image);
-                $path = env('WEB_PUBLIC_PATH').env('SELLER_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1UserId.DIRECTORY_SEPARATOR.$filename;
+                $path = $imageUploadPath.$filename;
                 $user->update([
                     'profile_picture' => $filename
                 ]);
