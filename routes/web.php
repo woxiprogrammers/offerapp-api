@@ -28,7 +28,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
     $app->post('data',array('uses' => 'Customer\CustomerController@getUserData'));
 
     $app->group(['prefix' => 'change_credential'], function () use($app){
-        $app->post('mobile_no',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
+        $app->post('mobile_no',array('uses' => 'Customer\CustomerController@changeCredential'));
 
         $app->post('password',array('uses' => 'Customer\CustomerController@changeCredential'));
     });
