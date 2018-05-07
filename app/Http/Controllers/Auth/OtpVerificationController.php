@@ -20,8 +20,6 @@ use App\Otp;
 class OtpVerificationController extends BaseController
 {
 
-    use UserTrait;
-
     public function getOtp(Request $request){
         try{
             $mobile_no = $request['mobile_no'];
@@ -89,9 +87,6 @@ class OtpVerificationController extends BaseController
                 $message = "Valid Otp";
                 $status = 200;
                 $otp->delete();
-                if($request['credentialSlug'] == 'mobile_no'){
-                    return $this->changeCredential($request);
-                }
             }else{
                 $message = "Invalid Otp...Please Enter Correct Otp";
                 $status = 412;

@@ -10,6 +10,7 @@ namespace App\Http\Controllers\CustomTraits;
 
 use App\Customer;
 use App\Http\Controllers\Auth\OtpVerificationController;
+use App\Otp;
 use App\Seller;
 use App\User;
 use Illuminate\Support\Facades\Auth;
@@ -93,27 +94,44 @@ trait UserTrait{
         try{
             $status = 200;
             $message = '';
-
+            $data = array();
             $user = Auth::user();
 
             if($request['credentialSlug'] == 'mobile_no'){
-
                 $newMobileNo = $request['mobile_no'];
-                $user->update([
-                    'mobile_no' => $newMobileNo
-                ]);
-                $message = 'Mobile No Updated Successfully';
-                JWTAuth::invalidate($request['token']);
+                $userotp = $request['otp'];
+                $otp = Otp::where('mobile_no',$newMobileNo)->orderBy('id','desc')->first();
+                if($otp['otp'] == $userotp) {
+                    $user->update([
+                        'mobile_no' => $newMobileNo
+                    ]);
+                    $data = [
+                        'userData' => $user
+                    ];
+                    $message = 'Mobile No Updated Successfully';
+                    $status = 200;
+                    $otp->delete();
+                    JWTAuth::invalidate($request['token']);
+
+                }else{
+                    $data = [
+                        'userData' => ''
+                    ];
+                    $message = "Invalid Otp...Please Enter Correct Otp";
+                    $status = 412;
+                }
+
             }else{
                 $newPassword = $request['password'];
                 $user->update([
                     'password' => Hash::make($newPassword)
                 ]);
+                $data = [
+                    'userData' => $user
+                ];
                 $message = 'Password Updated Successfully';
             }
-            $data = [
-                'userData' => $user
-            ];
+
         }catch (\Exception $e){
             $data = [
                 'action' => 'Change Credential',
