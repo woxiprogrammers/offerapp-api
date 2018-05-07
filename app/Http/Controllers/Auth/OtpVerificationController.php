@@ -88,7 +88,7 @@ class OtpVerificationController extends BaseController
             if($otp['otp'] == $userotp) {
                 $message = "Valid Otp";
                 $status = 200;
-                //$otp->delete();
+                $otp->delete();
                 if($request['credentialSlug'] == 'mobile_no'){
                     return $this->changeCredential($request);
                 }
