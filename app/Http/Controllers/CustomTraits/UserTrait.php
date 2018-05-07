@@ -10,7 +10,6 @@ namespace App\Http\Controllers\CustomTraits;
 
 use App\Customer;
 use App\Http\Controllers\Auth\OtpVerificationController;
-use App\Otp;
 use App\Seller;
 use App\User;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +27,7 @@ trait UserTrait{
             $this->user = Auth::user();
         }
     }
+
     public function editProfile(Request $request){
         try{
             $message = 'Success';
@@ -43,14 +43,15 @@ trait UserTrait{
             ]);
             if($user->role->slug == 'seller'){
                 $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
-                $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId;
 
             }else{
                 $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
             }
-            if($request->has($request['profilePicBase64'])){
-                $image = base64_decode($request['profilePicBase64']);
+            $base64Image = $request['profilePicBase64'];
+            if(strlen($base64Image)>0){
+                $image = base64_decode($base64Image);
                 $filename = $user->profile_picture;
 
                 //DELETES EXISTING
@@ -62,7 +63,7 @@ trait UserTrait{
                 File::makeDirectory($imageUploadPath, $mode = 0777, true, true);
                 $filename = mt_rand(1,10000000000).sha1(time()).".jpg";
                 file_put_contents($imageUploadPath.$filename, $image);
-                $path = $imageUploadPath.$filename;
+                $imageUploadPath .= $filename;
                 $user->update([
                     'profile_picture' => $filename
                 ]);
@@ -72,7 +73,7 @@ trait UserTrait{
             $data['userData']['email'] = $user['email'];
             $data['userData']['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
             $data['userData']['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
-            $message = "Profile is Updated successfully!!";
+            $message = "Profile Updated  successfully!!";
             $status = 200;
 
         }catch (\Exception $e){
@@ -94,44 +95,27 @@ trait UserTrait{
         try{
             $status = 200;
             $message = '';
-            $data = array();
+
             $user = Auth::user();
 
             if($request['credentialSlug'] == 'mobile_no'){
+
                 $newMobileNo = $request['mobile_no'];
-                $userotp = $request['otp'];
-                $otp = Otp::where('mobile_no',$newMobileNo)->orderBy('id','desc')->first();
-                if($otp['otp'] == $userotp) {
-                    $user->update([
-                        'mobile_no' => $newMobileNo
-                    ]);
-                    $data = [
-                        'userData' => $user
-                    ];
-                    $message = 'Mobile No Updated Successfully';
-                    $status = 200;
-                    $otp->delete();
-                    JWTAuth::invalidate($request['token']);
-
-                }else{
-                    $data = [
-                        'userData' => ''
-                    ];
-                    $message = "Invalid Otp...Please Enter Correct Otp";
-                    $status = 412;
-                }
-
+                $user->update([
+                    'mobile_no' => $newMobileNo
+                ]);
+                $message = 'Mobile No Updated Successfully';
+                JWTAuth::invalidate($request['token']);
             }else{
                 $newPassword = $request['password'];
                 $user->update([
                     'password' => Hash::make($newPassword)
                 ]);
-                $data = [
-                    'userData' => $user
-                ];
                 $message = 'Password Updated Successfully';
             }
-
+            $data = [
+                'userData' => $user
+            ];
         }catch (\Exception $e){
             $data = [
                 'action' => 'Change Credential',
