@@ -71,7 +71,7 @@ trait UserTrait{
             $data['userData']['email'] = $user['email'];
             $data['userData']['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
             $data['userData']['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
-            $message = "Profile Updated in successfully!!";
+            $message = "Profile is Updated successfully!!";
             $status = 200;
 
         }catch (\Exception $e){

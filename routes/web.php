@@ -25,6 +25,8 @@ $app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
 $app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
+    $app->post('data',array('uses' => 'Customer\CustomerController@getUserData'));
+
     $app->group(['prefix' => 'changecredential'], function () use($app){
         $app->post('mobile_no',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
