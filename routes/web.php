@@ -25,7 +25,11 @@ $app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
 $app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
-    $app->post('changecredential',array('uses' => 'Customer\CustomerController@changeCredential'));
+    $app->group(['prefix' => 'changecredential'], function () use($app){
+        $app->post('mobile_no',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
+
+        $app->post('password',array('uses' => 'Customer\CustomerController@changeCredential'));
+    });
 
     $app->group(['prefix' => 'profile'], function () use($app){
         $app->post('edit',array('uses' => 'Customer\CustomerController@editProfile'));
