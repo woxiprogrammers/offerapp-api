@@ -17,7 +17,7 @@ $app->get('/', function () use ($app) {
 
 $app->post('login',array('uses' => 'Auth\LoginController@login'));
 $app->post('logout',array('uses' => 'Auth\LoginController@logout'));
-$app->post('forgetpassword',array('uses' => 'Auth\LoginController@forgotPassword'));
+$app->post('forget_password',array('uses' => 'Auth\LoginController@forgotPassword'));
 
 
 $app->post('register',array('uses' => 'Auth\RegisterController@register'));
@@ -25,7 +25,13 @@ $app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
 $app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
-    $app->post('changecredential',array('uses' => 'Customer\CustomerController@changeCredential'));
+    $app->post('data',array('uses' => 'Customer\CustomerController@getUserData'));
+
+    $app->group(['prefix' => 'change_credential'], function () use($app){
+        $app->post('mobile_no',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
+
+        $app->post('password',array('uses' => 'Customer\CustomerController@changeCredential'));
+    });
 
     $app->group(['prefix' => 'profile'], function () use($app){
         $app->post('edit',array('uses' => 'Customer\CustomerController@editProfile'));

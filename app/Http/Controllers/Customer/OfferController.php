@@ -238,24 +238,23 @@ class OfferController extends BaseController
             $user_id = $user['id'];
             $offer_id = $request['offerId'];
             $reach_time = $request['selectedTime'];
-            $grab_code = str_random(5);
             $offer_status = 'interested';
             $offer_status_id = OfferStatus::where('slug', $offer_status)->pluck('id')->first();
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
+
             $customer_offer_detail = CustomerOfferDetail::where('customer_id', $customer_id)
                 ->where('offer_id', $offer_id)
                 ->first();
-            if (isset($customer_offer_detail)) {
+            if (count($customer_offer_detail)>0) {
                 $customer_offer_detail->offer_status_id = $offer_status_id;
                 $customer_offer_detail->save();
             }else{
                 $reach_time_id = ReachTime::where('slug', $reach_time)->pluck('id')->first();
-                 CustomerOfferDetail::create([
+                CustomerOfferDetail::create([
                     'customer_id' => $customer_id,
                     'offer_id' => $offer_id,
                     'offer_status_id' => $offer_status_id,
                     'reach_time_id' => $reach_time_id,
-                    'offer_code' => $grab_code,
                 ]);
             }
             $data = [
@@ -266,12 +265,11 @@ class OfferController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Set Interested Offers',
+                'action' => 'Add Interested Offers',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
             'data' => $data,
@@ -498,14 +496,14 @@ class OfferController extends BaseController
                     $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                     $valid_to = $offer->valid_to;
                     $sorted_offers[$key]['offerExpiry'] = date('d F, Y',strtotime($valid_to));
-                    $destination['latitude'] = $sellerAddress->latitude;
-                    $destination['longitude'] = $sellerAddress->longitude;
+                    $destination['latitude'] = (double)$sellerAddress->latitude;
+                    $destination['longitude'] = (double)$sellerAddress->longitude;
                     $sorted_offers[$key]['coordinate'] = $destination;
                     $distance = $this->getDistanceBetween($origin, $destination);
                     $sorted_offers[$key]['offerDistance'] = $distance;
                 }
 
-                $near_by_offers = collect($sorted_offers)->sortBy('distance')->values()->all();
+                $near_by_offers = collect($sorted_offers)->sortBy('offerDistance')->values()->all();
                 $pagedData = array_slice($near_by_offers, $currentPage * $this->perPage, $this->perPage);
                 foreach ($pagedData as $key => $data){
                     $mapOffers[$key]['offerId'] = $data['offerId'];
@@ -571,8 +569,8 @@ class OfferController extends BaseController
                 foreach ($seller_addresses as $key => $seller_address){
                     $seller_info[$key]['sellerAddressId'] = $seller_address->id;
                     $seller_info[$key]['sellerInfo'] = $seller_address->shop_name.''.$seller_address->address;
-                    $seller_info[$key]['latitude'] = $seller_address->latitude;
-                    $seller_info[$key]['longitude'] = $seller_address->longitude;
+                    $seller_info[$key]['latitude'] = (double)$seller_address->latitude;
+                    $seller_info[$key]['longitude'] = (double)$seller_address->longitude;
                     $offerCount = collect($seller_address_id)->where('id',$seller_address->id)->count();
                     $seller_info[$key]['offerCount'] = $offerCount;
                     $seller_info[$key]['floorId'] = $seller_address->floor_id;
@@ -817,15 +815,22 @@ class OfferController extends BaseController
             $status = 200;
             $data = array();
             $offerId = $request['offerId'];
-            $grabCode = CustomerOfferDetail::where('offer_id', $offerId)->pluck('offer_code')->first();
-            if(count($grabCode)>0){
-                $message = 'Success';
+
+            $customerOfferDetail = CustomerOfferDetail::where('offer_id', $offerId)->first();
+            if(count($customerOfferDetail->offer_code)>0){
+                $grab_code = str_random(5);
+
+                $customerOfferDetail->update([
+                    'offer_code' => $grab_code
+                ]);
+                $message = 'Grab Code Generated Successfully';
             }else{
-                $grabCode = '';
-                $message = 'Grab Code Not Found';
+                $grab_code = '';
+                $message = 'please enter a valid offerId';
             }
+
             $data = [
-                'grabCode' => $grabCode,
+                'grabCode' => $grab_code,
             ];
         }catch (\Exception $e){
             $message = "Fail";
