@@ -43,7 +43,7 @@ trait UserTrait{
             ]);
             if($user->role->slug == 'seller'){
                 $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
-                $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId;
+                $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
 
             }else{
                 $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
