@@ -9,7 +9,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\CustomTraits\UserTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
