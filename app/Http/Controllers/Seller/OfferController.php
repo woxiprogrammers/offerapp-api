@@ -9,12 +9,14 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Category;
+use App\CustomerOfferDetail;
 use App\OfferImage;
 use App\OfferStatus;
 use App\OfferType;
 use App\Seller;
 use App\Offer;
 use App\SellerAddress;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -114,7 +116,7 @@ class OfferController extends BaseController
                 $offerList['images'][$iterator]['image_url'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImage['name'];
                 $iterator++;
             }
-            $data = $offerList;
+            $data['offer_detail'] = $offerList;
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -256,4 +258,41 @@ class OfferController extends BaseController
         ];
         return response()->json($response, $status);
     }*/
+
+    public function getOfferInterestedListing(Request $request){
+        try{
+            $message = 'Success';
+            $status = 200;
+            $interestedCustomerIds = CustomerOfferDetail::where('offer_status_id',OfferStatus::where('slug','interested')->pluck('id')->first())->pluck('customer_id');
+            $iterator = 0;
+            $customerList = array();
+            foreach ($interestedCustomerIds as $customerId){
+                $customerData = User::join('customers','customers.user_id','=','users.id')
+                    ->select('users.id','users.first_name','users.last_name','users.mobile_no','users.email')
+                    ->where('customers.id',$customerId)
+                    ->first();
+                $customerList[$iterator]['customer_id'] = $customerId;
+                $customerList[$iterator]['customer_name'] = $customerData['first_name'].' '.$customerData['last_name'];
+                $customerList[$iterator]['customer_mobile'] = $customerData['mobile_no'];
+                $customerList[$iterator]['customer_email'] = $customerData['email'];
+                $iterator++;
+            }
+            $data['customer_data'] = $customerList;
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Interested Offer List for Seller',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'message' => $message,
+            'data' => $data
+        ];
+        return response()->json($response, $status);
+    }
 }

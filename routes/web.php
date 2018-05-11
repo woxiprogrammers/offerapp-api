@@ -114,6 +114,7 @@ $app->group(['prefix' => 'seller'], function () use($app){
         $app->post('create', array('uses' => 'Seller\OfferController@createOffer'));
         $app->post('listing', array('uses' => 'Seller\OfferController@getOfferListing'));
         $app->post('detail',array('uses' => 'Seller\OfferController@getOfferDetail'));
+        $app->post('interested-listing', array('uses' => 'Seller\OfferController@getOfferInterestedListing'));
     });
     $app->group(['prefix' => 'group'], function () use($app) {
         $app->get('list', array('uses' => 'Seller\GroupController@getGroupList'));
