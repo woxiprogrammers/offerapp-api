@@ -34,6 +34,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
     });
 
     $app->group(['prefix' => 'profile'], function () use($app){
+        $app->post('picture',array('uses' => 'Customer\CustomerController@editProfilePicture'));
         $app->post('edit',array('uses' => 'Customer\CustomerController@editProfile'));
     });
 
