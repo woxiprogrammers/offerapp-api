@@ -56,7 +56,7 @@ trait UserTrait{
             }
             $extension = $request->file('image')->getClientOriginalExtension();
             $filename = mt_rand(1,10000000000).sha1(time()).".{$extension}";
-/*            $request->file('image')->move($imageUploadPath,$filename);*/
+            $request->file('image')->move($imageUploadPath,$filename);
             $message = "Success";
             $status = 200;
             $data = [
