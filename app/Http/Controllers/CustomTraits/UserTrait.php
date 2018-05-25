@@ -28,6 +28,52 @@ trait UserTrait{
         }
     }
 
+    /**
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    public function profilePicture(Request $request)
+    {
+        try{
+            $user = Auth::user();
+            switch ($request['image_for']){
+                case 'customer-profile-edit' :
+                    $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
+                    break;
+
+                case 'seller-profile-edit' :
+                    $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                    break;
+                default :
+                    $imageUploadPath = '';
+            }
+            if (!file_exists($imageUploadPath)) {
+                File::makeDirectory($imageUploadPath, $mode = 0777, true, true);
+            }
+            $extension = $request->file('image')->getClientOriginalExtension();
+            $filename = mt_rand(1,10000000000).sha1(time()).".{$extension}";
+            $request->file('image')->move($imageUploadPath,$filename);
+            $message = "Success";
+            $status = 200;
+            $data = [
+                'profilePicPath' => $imageUploadPath.'/'.$filename
+            ];
+        }catch (\Exception $e){
+            $data = [
+                'action' => 'edit Profile Picture',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message,
+        ];
+        return response()->json($response, $status);
+    }
+
     public function editProfile(Request $request){
         try{
             $message = 'Success';
@@ -41,7 +87,8 @@ trait UserTrait{
                 'last_name' => $userData['lastName'],
                 'email' => $userData['email'],
             ]);
-            if($user->role->slug == 'seller'){
+
+            /*if($user->role->slug == 'seller'){
                 $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
 
@@ -67,7 +114,8 @@ trait UserTrait{
                 $user->update([
                     'profile_picture' => $filename
                 ]);
-            }
+            }*/
+
             $data['userData']['firstName'] = $user['first_name'];
             $data['userData']['lastName'] = $user['last_name'];
             $data['userData']['email'] = $user['email'];
