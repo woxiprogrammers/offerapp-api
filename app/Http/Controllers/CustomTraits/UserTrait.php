@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -31,9 +32,11 @@ trait UserTrait{
     /**
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    public function profilePicture(Request $request)
+    public function editProfilePicture(Request $request)
     {
         try{
+            $message = '';
+            $status = 200;
             $user = Auth::user();
             switch ($request['image_for']){
                 case 'customer-profile-edit' :
@@ -53,11 +56,11 @@ trait UserTrait{
             }
             $extension = $request->file('image')->getClientOriginalExtension();
             $filename = mt_rand(1,10000000000).sha1(time()).".{$extension}";
-            $request->file('image')->move($imageUploadPath,$filename);
+/*            $request->file('image')->move($imageUploadPath,$filename);*/
             $message = "Success";
             $status = 200;
             $data = [
-                'profilePicPath' => $imageUploadPath.'/'.$filename
+                'profilePicName' => $filename
             ];
         }catch (\Exception $e){
             $data = [
@@ -82,13 +85,7 @@ trait UserTrait{
 
             $data = array();
             $user = Auth::user();
-            $user->update([
-                'first_name' => $userData['firstName'],
-                'last_name' => $userData['lastName'],
-                'email' => $userData['email'],
-            ]);
-
-            /*if($user->role->slug == 'seller'){
+            if($user->role->slug == 'seller'){
                 $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
 
@@ -96,31 +93,19 @@ trait UserTrait{
                 $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
             }
-            $base64Image = $request['profilePicBase64'];
-            if(strlen($base64Image)>0){
-                $image = base64_decode($base64Image);
-                $filename = $user->profile_picture;
-
-                //DELETES EXISTING
-                if (file_exists($imageUploadPath.$filename)){
-                    unlink($imageUploadPath.$filename);
-                }
-
-                //CREATING NEW
-                File::makeDirectory($imageUploadPath, $mode = 0777, true, true);
-                $filename = mt_rand(1,10000000000).sha1(time()).".jpg";
-                file_put_contents($imageUploadPath.$filename, $image);
-                $imageUploadPath .= $filename;
-                $user->update([
-                    'profile_picture' => $filename
-                ]);
-            }*/
+            $user->update([
+                'first_name' => $userData['firstName'],
+                'last_name' => $userData['lastName'],
+                'email' => $userData['email'],
+                'profile_picture' => $userData['profilePicName'],
+            ]);
+            $imageUploadPath .= $request['profilePicName'];
 
             $data['userData']['firstName'] = $user['first_name'];
             $data['userData']['lastName'] = $user['last_name'];
             $data['userData']['email'] = $user['email'];
             $data['userData']['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
-            $data['userData']['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
+            $data['userData']['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath;
             $message = "Profile Updated  successfully!!";
             $status = 200;
 
