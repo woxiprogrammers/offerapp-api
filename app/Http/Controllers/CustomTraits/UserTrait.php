@@ -42,11 +42,11 @@ trait UserTrait{
                 'email' => $userData['email'],
             ]);
             if($user->role->slug == 'seller'){
-                $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
+                $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
 
             }else{
-                $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
+                $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
                 $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
             }
             $base64Image = $request['profilePicBase64'];

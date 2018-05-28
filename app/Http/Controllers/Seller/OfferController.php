@@ -173,7 +173,6 @@ class OfferController extends BaseController
 
     public function createOffer(Request $request){
         try {
-           // dd(json_encode($request->all()));
             $user = Auth::user();
             $input = $request->all();
             $seller_id = Seller::where('user_id', $user['id'])->pluck('id')->first();
