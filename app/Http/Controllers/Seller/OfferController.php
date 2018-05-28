@@ -20,12 +20,14 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 
 class OfferController extends BaseController
 {
+    protected $perPage = 5;
     public function __construct()
     {
         $this->middleware('jwt.auth');
@@ -39,6 +41,7 @@ class OfferController extends BaseController
             $user = Auth::user();
             $seller = Seller::where('user_id', $user['id'])->first();
             $sellerAddresses = $seller->sellerAddress;
+            $currentPage = Input::get('page', 1)-1;
             $iterator = 0;
             $offerList = array();
             foreach ($sellerAddresses as $key => $sellerAddress) {
@@ -48,6 +51,9 @@ class OfferController extends BaseController
                     $offerStatusId = OfferStatus::where('slug', $request['status_slug'])->pluck('id')->first();
                     $offers = $sellerAddress->offer->where('offer_status_id', $offerStatusId);
                 }
+                $offer_array = collect($offers)->toArray();
+                $pagedData = array_slice($offer_array, $currentPage * $this->perPage, $this->perPage);
+
                 foreach ($offers as $key2 => $offer) {
                     $offerList[$iterator]['offer_id'] = $offer['id'];
                     $offerList[$iterator]['seller_address_id'] = $sellerAddress['id'];
@@ -67,8 +73,16 @@ class OfferController extends BaseController
                     $iterator++;
                 }
             }
-            $data['status_slug'] = $request['status_slug'];
-            $data['offer_list'] = $offerList;
+            $data = [
+                'status_slug' => $request['status_slug'],
+                'offer_list' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($offers),
+                ],
+            ];
             $status = 200;
             $message = 'Success';
 
