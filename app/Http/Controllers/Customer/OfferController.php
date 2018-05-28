@@ -137,7 +137,7 @@ class OfferController extends BaseController
             $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
             $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
             $offers['offerDescription'] = $offer->description;
-            $offers['offerAddress'] = $seller->address;
+            $offers['sellerAddress'] = $seller->address;
 
             $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
             $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
