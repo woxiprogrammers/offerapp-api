@@ -40,13 +40,13 @@ trait UserTrait{
             $user = Auth::user();
             switch ($request['image_for']){
                 case 'customer-profile-edit' :
-                    $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
+                    $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR;
                     break;
 
                 case 'seller-profile-edit' :
-                    $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                    $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR;
                     break;
                 default :
                     $imageUploadPath = '';
@@ -79,19 +79,18 @@ trait UserTrait{
 
     public function editProfile(Request $request){
         try{
-            $message = 'Success';
-            $status = 200;
-            $userData = $request->except('token');
 
+            $userData = $request->except('token');
             $data = array();
             $user = Auth::user();
             if($user->role->slug == 'seller'){
                 $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
-                $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                $imageUploadPath = env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR;
 
             }else{
                 $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
-                $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
+                $imageUploadPath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR;
+
             }
             $user->update([
                 'first_name' => $userData['firstName'],
@@ -100,7 +99,6 @@ trait UserTrait{
                 'profile_picture' => $userData['profilePicName'],
             ]);
             $imageUploadPath .= $request['profilePicName'];
-
             $data['userData']['firstName'] = $user['first_name'];
             $data['userData']['lastName'] = $user['last_name'];
             $data['userData']['email'] = $user['email'];
@@ -110,6 +108,8 @@ trait UserTrait{
             $status = 200;
 
         }catch (\Exception $e){
+            $message = 'Fail';
+            $status = 500;
             $data = [
                 'action' => 'edit Profile',
                 'exception' => $e->getMessage(),

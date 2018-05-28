@@ -37,30 +37,23 @@ class GroupController extends BaseController
     public function getGroupList(){
         try {
             $user = Auth::user();
-            $currentPage = Input::get('page', 1)-1;
             $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
-            $seller_groups = Group::where('seller_id',$seller_id)->get();
-            $iterator = 0;
+            $groups = Group::where('seller_id',$seller_id)->paginate($this->perPage);
             $groupList = array();
-            $group_array = collect($seller_groups)->toArray();
-            $pagedData = array_slice($group_array, $currentPage * $this->perPage, $this->perPage);
-
-            foreach ($seller_groups as $key => $group) {
-                $groupList[$iterator]['group_id'] = $group['id'];
-                $groupList[$iterator]['group_name'] = $group['name'];
-                $groupList[$iterator]['total_member'] = $group->groupCustomer->count();
-                $iterator++;
+            foreach ($groups as $key => $group) {
+                $groupList[$key]['group_id'] = $group['id'];
+                $groupList[$key]['group_name'] = $group['name'];
+                $groupList[$key]['total_member'] = $group->groupCustomer->count();
             }
             $data = [
-                'select_group' => $pagedData,
+                'select_group' => $groupList,
                 'pagination' => [
-                    'page' => $currentPage + 1 ,
+                    'page' => $groups->currentPage() ,
                     'perPage' => $this->perPage,
-                    'pageCount' => count($pagedData),
-                    'totalCount' => count($groupList),
+                    'pageCount' => count($groups),
+                    'totalCount' => $groups->total(),
                 ],
             ];
-
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
