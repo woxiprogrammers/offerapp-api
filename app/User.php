@@ -35,6 +35,10 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         'password', 'token', 'remember_token',
     ];
 
+    public function role(){
+        return $this->belongsTo('App\Role','role_id');
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();

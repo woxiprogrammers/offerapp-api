@@ -192,30 +192,28 @@ class SellerController extends BaseController
             $sellerPaymentMode_id = SellerPaymentMode::where('seller_id' , $seller_id)->pluck('payment_mode_id')->first();
             $sellerPaymentMode = PaymentMode::where('id', $sellerPaymentMode_id)->pluck('name');
             $sellerInfo = array();
-                $user = $sellerAddress->seller->user;
-                $floor = $sellerAddress->floor;
-                $sellerInfo['shop_name'] =  $sellerAddress['shop_name'];
-                $sellerInfo['first_name'] = $user->first_name;
-                $sellerInfo['last_name'] = $user->last_name;
-                $sellerInfo['landline'] =  $sellerAddress['landline'];
-                $sellerInfo['floor_id'] = $floor->id;
-                $sellerInfo['floor_name'] = $floor->name;
-                $sellerInfo['Address'] = $sellerAddress['address'];
-                $sellerInfo['zipcode'] = $sellerAddress['zipcode'];
-                $sellerInfo['city'] = $sellerAddress['city'];
-                $sellerInfo['state'] = $sellerAddress['state'];
-                $sellerInfo['payment_type'] = $sellerPaymentMode;
-                $sellerInfo['photos'] = $sellerAddress->sellerAddressImage;
-            $data['Account Info'] = $sellerInfo;
+            $user = $sellerAddress->seller->user;
+            $floor = $sellerAddress->floor;
+            $sellerInfo['shop_name'] =  $sellerAddress['shop_name'];
+            $sellerInfo['first_name'] = $user->first_name;
+            $sellerInfo['last_name'] = $user->last_name;
+            $sellerInfo['landline'] =  $sellerAddress['landline'];
+            $sellerInfo['floor_id'] = $floor->id;
+            $sellerInfo['floor_name'] = $floor->name;
+            $sellerInfo['address'] = $sellerAddress['address'];
+            $sellerInfo['zipcode'] = $sellerAddress['zipcode'];
+            $sellerInfo['city'] = $sellerAddress['city'];
+            $sellerInfo['state'] = $sellerAddress['state'];
+            $sellerInfo['payment_type'] = $sellerPaymentMode;
+            $sellerInfo['images'] = $sellerAddress->sellerAddressImage;
+            $data['account_detail'] = $sellerInfo;
             $status = 200;
             $message = 'Success';
-
-
         }catch(\Exception $e) {
                 $status = 500;
                 $message = 'fail';
                 $data = [
-                    'action' => 'Account Info',
+                    'action' => 'Account Info for seller',
                     'exception' => $e->getMessage(),
                     'params' => $request->all()
                 ];
@@ -239,14 +237,14 @@ class SellerController extends BaseController
             ]);
             $sellerAddress = SellerAddress::where('seller_id', $seller_id)->orderBy('created_at','asc')->first();
             $sellerAddress->update([
-                                        'shop_name' => $request['shop_name'],
-                                        'landline' => $request['landline'],
-                                        'address' => $request['address'],
-                                        'floor_id'=> $request['floor_id'],
-                                        'zipcode' => $input['zipcode'],
-                                        'city' => $input['city'],
-                                        'state' => $input['state'],
-                                    ]);
+                'shop_name' => $request['shop_name'],
+                'landline' => $request['landline'],
+                'address' => $request['address'],
+                'floor_id'=> $request['floor_id'],
+                'zipcode' => $input['zipcode'],
+                'city' => $input['city'],
+                'state' => $input['state'],
+            ]);
             if($request->has('images')){
                 $sha1UserId = sha1($user['id']);
                 $sha1SellerAddressId = sha1($sellerAddress['id']);
@@ -282,5 +280,7 @@ class SellerController extends BaseController
         ];
         return response()->json($response, $status);
     }
+
+
 
 }
