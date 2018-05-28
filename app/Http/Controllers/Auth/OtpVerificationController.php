@@ -18,6 +18,7 @@ use App\Otp;
 
 class OtpVerificationController extends BaseController
 {
+
     public function getOtp(Request $request){
         try{
             $mobile_no = $request['mobile_no'];
@@ -26,6 +27,7 @@ class OtpVerificationController extends BaseController
                 $status = 412;
             }else{
                 $otp = $this->generateOtp();
+                //$otp = 'abcd';
 
                 $apiKey = urlencode(env('SMS_KEY'));
 
@@ -74,13 +76,12 @@ class OtpVerificationController extends BaseController
         return response()->json($response,$status);
     }
 
-
     public function verifyOtp(Request $request){
         try{
+
             $mobile_no = $request['mobile_no'];
             $userotp = $request['otp'];
             $otp = Otp::where('mobile_no',$mobile_no)->orderBy('id','desc')->first();
-            
             if($otp['otp'] == $userotp) {
                 $message = "Valid Otp";
                 $status = 200;
@@ -104,7 +105,9 @@ class OtpVerificationController extends BaseController
         $response = [
             'message' => $message,
         ];
-        return response()->json($response,$status);
+
+            return response()->json($response,$status);
+
 
     }
 

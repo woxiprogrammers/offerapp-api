@@ -16,6 +16,7 @@ use App\User;
 use App\Group;
 use App\Seller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Lumen\Routing\Controller as BaseController;
@@ -36,18 +37,30 @@ class GroupController extends BaseController
     public function getGroupList(){
         try {
             $user = Auth::user();
+            $currentPage = Input::get('page', 1)-1;
             $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
             $seller_groups = Group::where('seller_id',$seller_id)->get();
             $iterator = 0;
             $groupList = array();
+            $group_array = collect($seller_groups)->toArray();
+            $pagedData = array_slice($group_array, $currentPage * $this->perPage, $this->perPage);
+
             foreach ($seller_groups as $key => $group) {
                 $groupList[$iterator]['group_id'] = $group['id'];
                 $groupList[$iterator]['group_name'] = $group['name'];
                 $groupList[$iterator]['total_member'] = $group->groupCustomer->count();
-
                 $iterator++;
             }
-            $data['select_groups'] = $groupList;
+            $data = [
+                'select_group' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($groupList),
+                ],
+            ];
+
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -151,8 +164,10 @@ class GroupController extends BaseController
             $iterator = 0;
             $offerList = array();
 
+
             foreach ($group_offers_id as $key => $group_offer_id) {
                 $offers = Offer::where('id', $group_offer_id)->get();
+
 
                 foreach ($offers as $key2 => $offer) {
                     $offerList[$iterator]['offer_id'] = $offer['id'];
@@ -168,7 +183,19 @@ class GroupController extends BaseController
                     $iterator++;
                 }
             }
-            $data['group_offers'] = $offerList;
+            $currentPage = Input::get('page', 1)-1;
+            $group_offer_array = collect($offerList)->toArray();
+            $pagedData = array_slice($group_offer_array, $currentPage * $this->perPage, $this->perPage);
+
+            $data = [
+                'group_offers' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($offerList),
+                ],
+            ];
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -223,4 +250,39 @@ class GroupController extends BaseController
         ];
         return response()->json($response, $status);
     }
+
+    public function promoteOffer(Request $request){
+        try{
+            $user = Auth::user();
+            $offer_id = $request['offer_id'];
+
+            $role_id = User::where('id',$user->id)->pluck('role_id')->first();
+            foreach($request['group_id'] as $key => $groupId){
+                GroupMessage::create([
+                    'group_id' => $groupId,
+                    'role_id' => $role_id,
+                    'offer_id' => $offer_id,
+                    'reference_member_id' => $user->id
+                ]);
+            }
+
+            $message = 'Offer Promoted Successfully';
+            $status = 200;
+        }catch (\Exception $e) {
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Promote Offer',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+
+            ];
+            Log::critical(json_encode($data));
+        }
+        $response = [
+            'message' => $message,
+        ];
+        return response()->json($response, $status);
+    }
+
 }

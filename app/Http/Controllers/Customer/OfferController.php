@@ -178,73 +178,46 @@ class OfferController extends BaseController
         return response()->json($response,$status);
     }
 
-    /*public function getInterestedOfferDetail(Request $request){
+    public function swipperOffer(Request $request){
         try{
-            $message = "Success";
+            $message = 'success';
             $status = 200;
             $data = array();
-            $user = Auth::user();
-            $user_id = $user['id'];
-            $offer_id = $request['offerId'];
-
-            $offers = array();
+            $offerId = array();
             $imageList = array();
             $loadQueue = array();
-
-            $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
-
-            $customer_offer = CustomerOfferDetail::where('customer_id',$customer_id)
-                ->where('offer_id',$offer_id)
-                ->first();
-            $offer = $customer_offer->offer;
-            $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
-            $sha1OfferId = sha1($offer['id']);
-            $offers['offerId'] = $offer->id;
-            $offers['offerName'] = $offer->offerType->name;
-            $offerImages = $customer_offer->offer->offerImages;
-            if(count($offerImages) > 0){
-                $offers['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
-            }else{
-                $offers['offerPic'] = '/uploads/no_image.jpg';
-            }
-
-            $seller = $offer->sellerAddress->seller;
-            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
-            $valid_to = $offer->valid_to;
-            $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
-            $offers['sellerNumber'] = $offer->sellerAddress->landline;
-            $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
-            $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
-            $offers['offerDescription'] = $offer->description;
-            $offers['addedToWishList'] = $customer_offer->is_wishlist;
-
-            $offer_status = OfferStatus::where('id',$customer_offer->offer_status_id)->pluck('slug')->first();
-            if($offer_status == 'interested'){
-                $offers['addedToInterested'] = true;
-            }else{
-                $offers['addedToInterested'] = false;
-            }
-            $images = OfferImage::where('offer_id',$offer_id)->get();
-            if(count($images) > 0){
-                foreach($images as $key => $image){
-                    $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$image->name;
-                    $loadQueue[$key] = 0;
+            $user = Auth::user();
+            $user_id = $user['id'];
+            $customer_offer_type_slug = $request['offerTypeSlug'];
+            $customer_category_id = 0;
+            $origin = $request['coords'];
+            $radius = 1;
+            $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
+            if(isset($offers)){
+                foreach ($offers as $key => $offer){
+                    $offerId[$key] = $offer->id;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offerId[$key]);
+                    $offerImages = $offer->offerImages->first();
+                    if(count($offerImages) > 0){
+                        $imageList[$key] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->name;
+                        $loadQueue[$key] = 0;
+                    }else{
+                        $imageList[$key] = '/uploads/no_image.jpg';
+                        $loadQueue[$key] = 0;
+                    }
                 }
-            }else{
-                $imageList[0] = '/uploads/no_image.jpg';
-                $loadQueue[0] = 0;
             }
-
             $data = [
-                'offerDetail' => $offers,
+                'offerId' => $offerId,
                 'imageList' => $imageList,
-                'loadQueue' => $loadQueue
+                'loadQueue' => $loadQueue,
             ];
         }catch(\Exception $e){
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Get Interested Offer Detail ',
+                'action' => 'Swipper Offers',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
@@ -255,7 +228,7 @@ class OfferController extends BaseController
             'message' => $message
         ];
         return response()->json($response,$status);
-    }*/
+    }
 
     public function addToInterest(Request $request){
         try {
@@ -266,24 +239,23 @@ class OfferController extends BaseController
             $user_id = $user['id'];
             $offer_id = $request['offerId'];
             $reach_time = $request['selectedTime'];
-            $grab_code = str_random(5);
             $offer_status = 'interested';
             $offer_status_id = OfferStatus::where('slug', $offer_status)->pluck('id')->first();
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
+
             $customer_offer_detail = CustomerOfferDetail::where('customer_id', $customer_id)
                 ->where('offer_id', $offer_id)
                 ->first();
-            if (isset($customer_offer_detail)) {
+            if (count($customer_offer_detail)>0) {
                 $customer_offer_detail->offer_status_id = $offer_status_id;
                 $customer_offer_detail->save();
             }else{
                 $reach_time_id = ReachTime::where('slug', $reach_time)->pluck('id')->first();
-                 CustomerOfferDetail::create([
+                CustomerOfferDetail::create([
                     'customer_id' => $customer_id,
                     'offer_id' => $offer_id,
                     'offer_status_id' => $offer_status_id,
                     'reach_time_id' => $reach_time_id,
-                    'offer_code' => $grab_code,
                 ]);
             }
             $data = [
@@ -294,12 +266,11 @@ class OfferController extends BaseController
             $message = "Fail";
             $status = 500;
             $data = [
-                'action' => 'Set Interested Offers',
+                'action' => 'Add Interested Offers',
                 'exception' => $e->getMessage(),
                 'params' => $request->all()
             ];
             Log::critical(json_encode($data));
-            abort(500);
         }
         $response = [
             'data' => $data,
@@ -413,9 +384,17 @@ class OfferController extends BaseController
             $sort_by = $request['sortSelected'];
             $currentPage = Input::get('page', 1)-1;
             $customer_offer_type_slug = $request['offerTypeSlug'];
-            $customer_category_id = $request['categorySelected'];
+            if ($request['categorySelected'] > 0){
+                $customer_category_id = $request['categorySelected'];
+            }else{
+                $customer_category_id = 0;
+            }
             $origin = $request['coords'];
-            $radius = $request['distance'];
+            if ($request['distance'] > 0){
+                $radius = $request['distance'];
+            }else{
+                $radius = 1;
+            }
             $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
             if($sort_by == 'latestFirst'){
                 $sort_by_latest = array();
@@ -444,7 +423,7 @@ class OfferController extends BaseController
                 if(count($customer_offer->offerImages) > 0){
                     $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$customer_offer->offerImages->first()->name;
                 }else{
-                    $offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
                 }
                 $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
                 $valid_to = $customer_offer->valid_to;
@@ -456,7 +435,7 @@ class OfferController extends BaseController
             $data = [
                 'records' => $pagedData,
                 'pagination' => [
-                    'page' => $currentPage +1 ,
+                    'page' => $currentPage + 1,
                     'perPage' => $this->perPage,
                     'pageCount' => count($pagedData),
                     'totalCount' => count($near_by_offers),
@@ -482,12 +461,221 @@ class OfferController extends BaseController
 
     }
 
+    public function mapOffers(Request $request)
+    {
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $markers = array();
+            $near_by_offers = array();
+            $sorted_offers = array();
+            $mapOffers = array();
+            $user = Auth::user();
+            $user_id = $user['id'];
+            $currentPage = Input::get('page', 1)-1;
+            $customer_offer_type_slug = $request['offerTypeSlug'];
+            $customer_category_id = $request['categorySelected'];
+            $origin = $request['coords'];
+            $radius = $request['distance'];
+
+            $offers = $this->offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius);
+            if(count($offers) > 0){
+                foreach ($offers as $key => $offer){
+                    $seller_user = $offer->sellerAddress->seller->user;
+                    $sellerAddress = $offer->sellerAddress;
+                    $sorted_offers[$key]['offerId'] = $offer->id;
+                    $sorted_offers[$key]['offerName'] = $offer->offerType->name;
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer->id);
+                    if(count($offer->offerImages) > 0){
+                        $sorted_offers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offer->offerImages->first()->name;
+                    }else{
+                        $sorted_offers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    }
+                    $sorted_offers[$key]['offerAddress'] = $sellerAddress->shop_name.$sellerAddress->address;
+                    $sorted_offers[$key]['sellerInfo'] = $seller_user->first_name.' '.$seller_user->last_name;
+                    $valid_to = $offer->valid_to;
+                    $sorted_offers[$key]['offerExpiry'] = date('d F, Y',strtotime($valid_to));
+                    $destination['latitude'] = (double)$sellerAddress->latitude;
+                    $destination['longitude'] = (double)$sellerAddress->longitude;
+                    $sorted_offers[$key]['coordinate'] = $destination;
+                    $distance = $this->getDistanceBetween($origin, $destination);
+                    $sorted_offers[$key]['offerDistance'] = $distance;
+                }
+
+                $near_by_offers = collect($sorted_offers)->sortBy('offerDistance')->values()->all();
+                $pagedData = array_slice($near_by_offers, $currentPage * $this->perPage, $this->perPage);
+                foreach ($pagedData as $key => $data){
+                    $mapOffers[$key]['offerId'] = $data['offerId'];
+                    $mapOffers[$key]['offerName'] = $data['offerName'];
+                    $mapOffers[$key]['offerPic'] = $data['offerPic'];
+                    $mapOffers[$key]['offerAddress'] = $data['offerAddress'];
+                    $mapOffers[$key]['sellerInfo'] = $data['sellerInfo'];
+                    $mapOffers[$key]['offerExpiry'] = $data['offerExpiry'];
+                    $mapOffers[$key]['offerDistance'] = $data['offerDistance'];
+                    $markers[$key]['offerId'] = $data['offerId'];
+                    $markers[$key]['coordinate'] = $data['coordinate'];
+                    $markers[$key]['key'] = $data['offerId'];
+                }
+            }
+            $data = [
+                'records' => $mapOffers,
+                'markers' => $markers,
+                'pagination' => [
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($mapOffers),
+                    'totalCount' => count($near_by_offers),
+                ],
+            ];
+
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'mapOffers',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
+    public function ARSellerInfo(Request $request){
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $origin = $request['coords'];
+            $radius = $request['distance'];
+            $offerTypeSlug = $request['offerTypeSlug'];
+            $seller_addresses = array();
+            $seller_address_id = array();
+            $seller_info = array();
+            $offers = $this->offerWithinBoundingCircle($origin, $offerTypeSlug, 0, $radius);
+            if(count($offers)>0){
+                foreach ($offers as $key => $offer){
+                    $seller_addresses[$key] = $offer->sellerAddress;
+                    $seller_address_id[$key]['id'] = $offer->sellerAddress->id;
+                }
+                $seller_addresses = collect($seller_addresses);
+                $seller_addresses = $seller_addresses->unique('id')->values()->all();
+                foreach ($seller_addresses as $key => $seller_address){
+                    $seller_info[$key]['sellerAddressId'] = $seller_address->id;
+                    $seller_info[$key]['sellerInfo'] = $seller_address->shop_name.''.$seller_address->address;
+                    $seller_info[$key]['latitude'] = (double)$seller_address->latitude;
+                    $seller_info[$key]['longitude'] = (double)$seller_address->longitude;
+                    $offerCount = collect($seller_address_id)->where('id',$seller_address->id)->count();
+                    $seller_info[$key]['offerCount'] = $offerCount;
+                    $seller_info[$key]['floorId'] = $seller_address->floor_id;
+                }
+
+            }else{
+                $message = "There No offer in your nearby";
+            }
+            $data = [
+                'records' => $seller_info
+            ];
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'AR Seller Info',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
+    public function AROffers(Request $request){
+        try{
+            $message = "Success";
+            $status = 200;
+            $data = array();
+            $nearByOffers = array();
+            $currentPage = Input::get('page', 1)-1;
+            $seller_address_id = $request['sellerAddressId'];
+            $offerTypeSlug = $request['offerTypeSlug'];
+
+            if($offerTypeSlug == 'all'){
+                $offers = Offer::where('seller_address_id', $seller_address_id)->get();
+
+            }else{
+                $offer_type_id = OfferType::where('slug', $offerTypeSlug)->pluck('id')->first();
+                $offers = Offer::where('seller_address_id', $seller_address_id)
+                    ->where('offer_type_id', $offer_type_id)->get();
+            }
+            if(count($offers)>0){
+                foreach ($offers as $key => $offer){
+                    $imageUploadPath = env('OFFER_IMAGE_UPLOAD');
+                    $sha1OfferId = sha1($offer['id']);
+                    $nearByOffers[$key]['offerId'] = $offer->id;
+                    $nearByOffers[$key]['offerName'] = $offer->offerType->name;
+                    $offerImages = $offer->offerImages;
+                    if(count($offerImages) > 0){
+                        $nearByOffers[$key]['offerPic'] = $imageUploadPath.$sha1OfferId.DIRECTORY_SEPARATOR.$offerImages->first()->name;
+
+                    }else{
+                        $nearByOffers[$key]['offerPic'] = '/uploads/no_image.jpg';
+                    }
+                    $seller = $offer->sellerAddress->seller;
+                    $nearByOffers[$key]['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+                    $valid_to = $offer->valid_to;
+                    $nearByOffers[$key]['offerExpiry']= date('d F, Y',strtotime($valid_to));
+                }
+
+            }else{
+                $message = "There No offer in your nearby";
+            }
+            $pagedData = array_slice($nearByOffers, $currentPage * $this->perPage, $this->perPage);
+
+            $data = [
+                'records' => $pagedData,
+                'pagination' => [
+                    'page' => $currentPage + 1,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($offers),
+                ],
+            ];
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'AR Offer Detail',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response,$status);
+    }
+
     public function offerWithinBoundingCircle($origin, $customer_offer_type_slug,  $customer_category_id, $radius){
         try{
+            $near_by_offers = array();
             $latitude = $origin['latitude'];
             $longitude = $origin['longitude'];
             $earth_radius = 6371;
-            $category_id = $customer_category_id;
             $maxLat = $latitude + rad2deg($radius/$earth_radius);
             $minLat = $latitude - rad2deg($radius/$earth_radius);
             $maxLon = $longitude + rad2deg(asin($radius/$earth_radius) / cos(deg2rad($latitude)));
@@ -497,11 +685,11 @@ class OfferController extends BaseController
                 ->whereBetween('latitude', [$minLat, $maxLat])
                 ->whereBetween('longitude', [$minLon, $maxLon])
                 ->pluck('id')->all();
-            $near_by_offers = array();
 
             $offers = Offer::whereIn('seller_address_id', $near_by_seller_addresses)
                             ->get();
 
+            if($customer_category_id > 0){
                 $category_id = Category::where('id',$customer_category_id)
                     ->pluck('category_id')->first();
                 if(isset($category_id)){
@@ -523,6 +711,10 @@ class OfferController extends BaseController
                     $sort_by_offers_type = $sort_by_category;
                 }
                 $near_by_offers = $sort_by_offers_type;
+            }else{
+
+                $near_by_offers = $offers;
+            }
 
             return $near_by_offers;
 
@@ -540,7 +732,7 @@ class OfferController extends BaseController
         }
     }
 
-    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 2){
+    public function getDistanceBetween($origin, $destination ,$unit = 'km', $decimals = 1){
         try{
             // Calculate the distance in degrees using Hervasine formula
             $degrees = $this->calcDistance($origin, $destination);
@@ -558,7 +750,7 @@ class OfferController extends BaseController
                     // 1 degree = 59.97662 nautic miles, based on the average diameter of the Earth (6,876.3 nautical miles)
                     $distance = $degrees * 59.97662;
             }
-            return $distance;
+            return number_format($distance, $decimals);
         }catch (\Exception $e ){
             $data = [
                 'action' => 'get Distance Between Origin And Destination',
@@ -619,6 +811,46 @@ class OfferController extends BaseController
         return $data;
     }
 
+    public function getGrabCode(Request $request){
+        try{
+            $status = 200;
+            $data = array();
+            $offerId = $request['offerId'];
+
+            $customerOfferDetail = CustomerOfferDetail::where('offer_id', $offerId)->first();
+            //if(count($customerOfferDetail->offer_code)>0){
+                if($customerOfferDetail->offer_code != null){
+                    $grab_code = str_random(5);
+
+                $customerOfferDetail->update([
+                    'offer_code' => $grab_code
+                ]);
+                $message = 'Grab Code Generated Successfully';
+            }else{
+                $grab_code = '';
+                $message = 'please enter a valid offerId';
+            }
+
+            $data = [
+                'grabCode' => $grab_code,
+            ];
+        }catch (\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'parameter' => $request->all(),
+                'action' => 'Get Grab Code',
+                'errorMessage' => $e->getMessage()
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response, $status);
+    }
 
 
 }
