@@ -72,15 +72,15 @@ class OfferController extends BaseController
                     $offerList[$iterator]['grabbed_count'] = 1;
                     $iterator++;
                 }
-
             }
             $data = [
+                'status_slug' => $request['status_slug'],
                 'offer_list' => $pagedData,
                 'pagination' => [
-                'page' => $currentPage + 1 ,
-                'perPage' => $this->perPage,
-                'pageCount' => count($pagedData),
-                'totalCount' => count($offers),
+                    'page' => $currentPage + 1 ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($pagedData),
+                    'totalCount' => count($offers),
                 ],
             ];
             $status = 200;
@@ -112,8 +112,8 @@ class OfferController extends BaseController
             $sellerAddress = $offer->sellerAddress;
             $offerList['seller_address_id'] = $sellerAddress->id;
             $offerList['floor_no'] = $sellerAddress->floor->no;
-            $offerList['seller_address'] = $sellerAddress->shop_name . ' ' . $sellerAddress->city;
-            $offerList['full_seller_address'] = $sellerAddress->floor->no . ' ' . $sellerAddress->shop_name . ' ' . $sellerAddress->address . ' ' . $sellerAddress->city . ' ' . $sellerAddress->state . ' ' . $sellerAddress->zipcode;
+            $offerList['seller_address'] = $sellerAddress->shop_name . ' ,' . $sellerAddress->city;
+            $offerList['full_seller_address'] = $sellerAddress->floor->name . ' floor, ' . $sellerAddress->shop_name . ', ' . $sellerAddress->address . ', ' . $sellerAddress->city . ', ' . $sellerAddress->state . ', ' . $sellerAddress->zipcode;
             $offerList['offer_type_name'] = $offer->offerType->name;
             $offerList['offer_status_name'] = $offer->offerStatus->name;
             $offerList['offer_description'] = ($offer->description == null) ? '' : $offer->description;
