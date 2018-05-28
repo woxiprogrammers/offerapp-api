@@ -129,14 +129,15 @@ class OfferController extends BaseController
                 $imageList[0] = '/uploads/no_image.jpg';
                 $loadQueue[0] = 0;
             }
-            $seller = $offer->sellerAddress->seller;
-            $offers['sellerInfo'] = $seller->user->first_name.' '.$seller->user->last_name;
+            $seller = $offer->sellerAddress;
+            $offers['sellerInfo'] = $seller->shop_name;
             $valid_to = $offer->valid_to;
             $offers['offerExpiry']= date('d F, Y',strtotime($valid_to));
             $offers['sellerNumber'] = $offer->sellerAddress->landline;
             $offers['offerLatitude'] = (double)$offer->sellerAddress->latitude;
             $offers['offerLongitude'] = (double)$offer->sellerAddress->longitude;
             $offers['offerDescription'] = $offer->description;
+            $offers['offerAddress'] = $seller->address;
 
             $customerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
             $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
