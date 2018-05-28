@@ -41,12 +41,12 @@ trait UserTrait{
             switch ($request['image_for']){
                 case 'customer-profile-edit' :
                     $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR;
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR;
                     break;
 
                 case 'seller-profile-edit' :
                     $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
-                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR;
+                    $imageUploadPath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR;
                     break;
                 default :
                     $imageUploadPath = '';
