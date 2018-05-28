@@ -67,6 +67,7 @@ class OfferController extends BaseController
                     $iterator++;
                 }
             }
+            $data['status_slug'] = $request['status_slug'];
             $data['offer_list'] = $offerList;
             $status = 200;
             $message = 'Success';
@@ -97,8 +98,8 @@ class OfferController extends BaseController
             $sellerAddress = $offer->sellerAddress;
             $offerList['seller_address_id'] = $sellerAddress->id;
             $offerList['floor_no'] = $sellerAddress->floor->no;
-            $offerList['seller_address'] = $sellerAddress->shop_name . ' ' . $sellerAddress->city;
-            $offerList['full_seller_address'] = $sellerAddress->floor->no . ' ' . $sellerAddress->shop_name . ' ' . $sellerAddress->address . ' ' . $sellerAddress->city . ' ' . $sellerAddress->state . ' ' . $sellerAddress->zipcode;
+            $offerList['seller_address'] = $sellerAddress->shop_name . ' ,' . $sellerAddress->city;
+            $offerList['full_seller_address'] = $sellerAddress->floor->name . ' floor, ' . $sellerAddress->shop_name . ', ' . $sellerAddress->address . ', ' . $sellerAddress->city . ', ' . $sellerAddress->state . ', ' . $sellerAddress->zipcode;
             $offerList['offer_type_name'] = $offer->offerType->name;
             $offerList['offer_status_name'] = $offer->offerStatus->name;
             $offerList['offer_description'] = ($offer->description == null) ? '' : $offer->description;
@@ -172,6 +173,7 @@ class OfferController extends BaseController
 
     public function createOffer(Request $request){
         try {
+           // dd(json_encode($request->all()));
             $user = Auth::user();
             $input = $request->all();
             $seller_id = Seller::where('user_id', $user['id'])->pluck('id')->first();

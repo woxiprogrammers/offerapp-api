@@ -200,7 +200,7 @@ class SellerController extends BaseController
             $sellerInfo['landline'] =  $sellerAddress['landline'];
             $sellerInfo['floor_id'] = $floor->id;
             $sellerInfo['floor_name'] = $floor->name;
-            $sellerInfo['Address'] = $sellerAddress['address'];
+            $sellerInfo['address'] = $sellerAddress['address'];
             $sellerInfo['zipcode'] = $sellerAddress['zipcode'];
             $sellerInfo['city'] = $sellerAddress['city'];
             $sellerInfo['state'] = $sellerAddress['state'];
@@ -237,14 +237,14 @@ class SellerController extends BaseController
             ]);
             $sellerAddress = SellerAddress::where('seller_id', $seller_id)->orderBy('created_at','asc')->first();
             $sellerAddress->update([
-                                        'shop_name' => $request['shop_name'],
-                                        'landline' => $request['landline'],
-                                        'address' => $request['address'],
-                                        'floor_id'=> $request['floor_id'],
-                                        'zipcode' => $input['zipcode'],
-                                        'city' => $input['city'],
-                                        'state' => $input['state'],
-                                    ]);
+                'shop_name' => $request['shop_name'],
+                'landline' => $request['landline'],
+                'address' => $request['address'],
+                'floor_id'=> $request['floor_id'],
+                'zipcode' => $input['zipcode'],
+                'city' => $input['city'],
+                'state' => $input['state'],
+            ]);
             if($request->has('images')){
                 $sha1UserId = sha1($user['id']);
                 $sha1SellerAddressId = sha1($sellerAddress['id']);
