@@ -10,6 +10,7 @@ namespace App\Http\Controllers\CustomTraits;
 
 use App\Customer;
 use App\Http\Controllers\Auth\OtpVerificationController;
+use App\Otp;
 use App\Seller;
 use App\User;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
+use phpDocumentor\Reflection\Types\String_;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 
@@ -126,30 +128,38 @@ trait UserTrait{
 
     public function changeCredential(Request $request){
         try{
-            $status = 200;
             $message = '';
-
             $user = Auth::user();
-
             if($request['credentialSlug'] == 'mobile_no'){
-
                 $newMobileNo = $request['mobile_no'];
-                $user->update([
-                    'mobile_no' => $newMobileNo
-                ]);
-                $message = 'Mobile No Updated Successfully';
-                JWTAuth::invalidate($request['token']);
+                $otp = Otp::where('mobile_no',$newMobileNo)->pluck('otp')->last();
+                if($otp == $request['otp']) {
+                    $user->update([
+                        'mobile_no' => $newMobileNo
+                    ]);
+                    $message = 'Mobile No Updated Successfully';
+                    $status = 200;
+
+                    //    Auth::logout();
+                 }else{
+                    $message = 'Invalid Otp';
+                    $status = 401;
+                }
             }else{
                 $newPassword = $request['password'];
                 $user->update([
                     'password' => Hash::make($newPassword)
                 ]);
                 $message = 'Password Updated Successfully';
+                $status = 200;
+
             }
             $data = [
                 'userData' => $user
             ];
         }catch (\Exception $e){
+            $status = 500;
+            $message = 'fail';
             $data = [
                 'action' => 'Change Credential',
                 'exception' => $e->getMessage(),
