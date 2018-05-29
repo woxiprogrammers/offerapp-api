@@ -31,13 +31,19 @@ class LoginController extends BaseController
         try{
             $credentials = $request->only('mobile_no','password');
             $userData =  array();
+
             if($token = JWTAuth::attempt($credentials)){
                 $user = Auth::user();
                 $userData['firstName'] = $user['first_name'];
                 $userData['lastName'] = $user['last_name'];
                 $userData['email'] = $user['email'];
+                if($user->role->slug == 'seller'){
+                    $imageUploadPath = env('SELLER_PROFILE_IMAGE_UPLOAD');
+                }else{
+                    $imageUploadPath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD');
+                }
                 $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
-                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : env('OFFER_IMAGE_UPLOAD').$user['profile_picture'];
+                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{

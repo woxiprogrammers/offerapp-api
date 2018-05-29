@@ -52,6 +52,17 @@ class OfferController extends BaseController
             foreach ($offers as $key => $offer) {
                 $offerType = $offer->offerType;
                 $offerStatus = $offer->offerStatus;
+                $wishlist_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                 ->where('is_wishlist', true)
+                                                 ->count();
+                $interested_status_id = OfferStatus::where('slug','interested')->pluck('id');
+                $interested_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                    ->where('offer_status_id', $interested_status_id)
+                                                    ->count();
+                $grab_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                 ->whereNotNull('offer_code')
+                                                     ->count();
+
                 $offerList[$key]['offer_id'] = $offer['id'];
                 $offerList[$key]['seller_address_id'] = $offer['seller_address_id'];
                 $offerList[$key]['offer_type_id'] = $offer['offer_type_id'];
@@ -64,9 +75,10 @@ class OfferController extends BaseController
                 $valid_to = $offer['valid_to'];
                 $offerList[$key]['start_date'] = date('d F, Y', strtotime($valid_from));
                 $offerList[$key]['end_date'] = date('d F, Y', strtotime($valid_to));
-                $offerList[$key]['wishlist_count'] = 1;
-                $offerList[$key]['interested_count'] = 1;
-                $offerList[$key]['grabbed_count'] = 1;
+                $offerList[$key]['wishlist_count'] =  $wishlist_count;
+                $offerList[$key]['interested_count'] = $interested_count;
+                $offerList[$key]['grabbed_count'] = $grab_count;
+
             }
 
             $data = [

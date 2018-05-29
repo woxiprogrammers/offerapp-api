@@ -180,11 +180,11 @@ trait UserTrait{
             $data = array();
             if($user->role->slug == 'seller'){
                 $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
-                $imagePath = env('WEB_PUBLIC_PATH').env('SELLER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1SellerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
+                $imagePath = env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
 
             }else{
                 $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
-                $imagePath = env('WEB_PUBLIC_PATH').env('CUSTOMER_PROFILE_IMAGE_UPLOAD').DIRECTORY_SEPARATOR.$sha1CustomerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
+                $imagePath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
             }
             $data['userData']['firstName'] = $user['first_name'];
             $data['userData']['lastName'] = $user['last_name'];
