@@ -37,30 +37,23 @@ class GroupController extends BaseController
     public function getGroupList(){
         try {
             $user = Auth::user();
-            $currentPage = Input::get('page', 1)-1;
             $seller_id= Seller::where('user_id',$user['id'])->pluck('id')->first();
-            $seller_groups = Group::where('seller_id',$seller_id)->get();
-            $iterator = 0;
+            $groups = Group::where('seller_id',$seller_id)->paginate($this->perPage);
             $groupList = array();
-            $group_array = collect($seller_groups)->toArray();
-            $pagedData = array_slice($group_array, $currentPage * $this->perPage, $this->perPage);
-
-            foreach ($seller_groups as $key => $group) {
-                $groupList[$iterator]['group_id'] = $group['id'];
-                $groupList[$iterator]['group_name'] = $group['name'];
-                $groupList[$iterator]['total_member'] = $group->groupCustomer->count();
-                $iterator++;
+            foreach ($groups as $key => $group) {
+                $groupList[$key]['group_id'] = $group['id'];
+                $groupList[$key]['group_name'] = $group['name'];
+                $groupList[$key]['total_member'] = $group->groupCustomer->count();
             }
             $data = [
-                'select_group' => $pagedData,
+                'select_group' => $groupList,
                 'pagination' => [
-                    'page' => $currentPage + 1 ,
+                    'page' => $groups->currentPage() ,
                     'perPage' => $this->perPage,
-                    'pageCount' => count($pagedData),
-                    'totalCount' => count($groupList),
+                    'pageCount' => count($groups),
+                    'totalCount' => $groups->total(),
                 ],
             ];
-
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -124,20 +117,24 @@ class GroupController extends BaseController
         try {
             $group_id = $request['group_id'];
             $customerIds = GroupCustomer::where('group_id', $group_id)->pluck('customer_id');
-            $iterator = 0;
             $memberDetailList = array();
-            foreach ($customerIds as $key => $customerId){
-                $customerData = User::join('customers','customers.user_id','=','users.id')
-                                    ->select('users.id','users.first_name','users.last_name','users.mobile_no','users.email')
-                                    ->where('customers.id',$customerId)
-                                    ->first();
-                $memberDetailList[$iterator]['customer_id'] = $customerId;
-                $memberDetailList[$iterator]['customer_name'] = $customerData['first_name'].' '.$customerData['last_name'];
-                $memberDetailList[$iterator]['customer_mobile'] = $customerData['mobile_no'];
-                $memberDetailList[$iterator]['customer_email'] = $customerData['email'];
-                $iterator++;
+            $customers = Customer::whereIn('id', $customerIds)->paginate($this->perPage);
+            foreach ($customers as $key => $customer){
+                $user = $customer->user;
+                $memberDetailList[$key]['customer_id'] = $user->id;
+                $memberDetailList[$key]['customer_name'] = $user->first_name.' '.$user->last_name;
+                $memberDetailList[$key]['customer_mobile'] = $user->mobile_no;
+                $memberDetailList[$key]['customer_email'] = $user->email;
             }
-            $data['group_details'] = $memberDetailList;
+            $data = [
+                'group_details' => $memberDetailList,
+                'pagination' => [
+                    'page' => $customers->currentPage() ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($customers),
+                    'totalCount' => $customers->total(),
+                ],
+            ];
             $message = 'Success';
             $status = 200;
         } catch (\Exception $e) {
@@ -160,40 +157,33 @@ class GroupController extends BaseController
     public function groupOfferListing(Request $request){
         try{
             $group_id = $request['group_id'];
-            $group_offers_id = GroupMessage::where('group_id', $group_id)->pluck('offer_id');
-            $iterator = 0;
+            $group_offers= GroupMessage::where('group_id', $group_id)->paginate($this->perPage);
             $offerList = array();
 
 
-            foreach ($group_offers_id as $key => $group_offer_id) {
-                $offers = Offer::where('id', $group_offer_id)->get();
+            foreach ($group_offers as $key => $group_offer) {
+                $offer = $group_offer->offer;
 
-
-                foreach ($offers as $key2 => $offer) {
-                    $offerList[$iterator]['offer_id'] = $offer['id'];
-                    $offerList[$iterator]['offer_type_id'] = $offer['offer_type_id'];
-                    $offerList[$iterator]['offer_type_name'] = $offer->offerType->name;
-                    $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
-                    $offerList[$iterator]['offer_status_name'] = $offer->offerStatus->name;
-                    $offerList[$iterator]['offer_description'] = $offer->description;
+                    $offerList[$key]['offer_id'] = $offer['id'];
+                    $offerList[$key]['offer_type_id'] = $offer['offer_type_id'];
+                    $offerList[$key]['offer_type_name'] = $offer->offerType->name;
+                    $offerList[$key]['offer_status_id'] = $offer['offer_status_id'];
+                    $offerList[$key]['offer_status_name'] = $offer->offerStatus->name;
+                    $offerList[$key]['offer_description'] = $offer->description;
                     $valid_from = $offer->valid_from;
                     $valid_to = $offer->valid_to;
-                    $offerList[$iterator]['start_date'] = date('d F, Y', strtotime($valid_from));
-                    $offerList[$iterator]['end_date'] = date('d F, Y', strtotime($valid_to));
-                    $iterator++;
+                    $offerList[$key]['start_date'] = date('d F, Y', strtotime($valid_from));
+                    $offerList[$key]['end_date'] = date('d F, Y', strtotime($valid_to));
                 }
-            }
-            $currentPage = Input::get('page', 1)-1;
-            $group_offer_array = collect($offerList)->toArray();
-            $pagedData = array_slice($group_offer_array, $currentPage * $this->perPage, $this->perPage);
+
 
             $data = [
-                'group_offers' => $pagedData,
+                'group_offers' => $offerList,
                 'pagination' => [
-                    'page' => $currentPage + 1 ,
+                    'page' => $group_offers->currentPage() ,
                     'perPage' => $this->perPage,
-                    'pageCount' => count($pagedData),
-                    'totalCount' => count($offerList),
+                    'pageCount' => count($offerList),
+                    'totalCount' => $group_offers->total(),
                 ],
             ];
             $message = 'Success';

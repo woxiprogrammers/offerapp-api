@@ -34,6 +34,13 @@ class CategoryController extends BaseController
                 $categoryList[$iterator]['category_id'] = $category['id'];
                 $categoryList[$iterator]['category_name'] = $category['name'];
                 $categoryList[$iterator]['category_slug'] = $category['slug'];
+                $subCategoryCount = Category::where('category_id',$category['id'])->count();
+                if($subCategoryCount > 0){
+                   $categoryList[$iterator]['has_subcategory'] = true;
+                }else{
+                   $categoryList[$iterator]['has_subcategory'] = false;
+                }
+
                 $iterator++;
             }
             $data['select_category_type'] = $categoryList;

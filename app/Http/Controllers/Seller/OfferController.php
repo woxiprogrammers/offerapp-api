@@ -40,47 +40,53 @@ class OfferController extends BaseController
         try {
             $user = Auth::user();
             $seller = Seller::where('user_id', $user['id'])->first();
-            $sellerAddresses = $seller->sellerAddress;
-            $currentPage = Input::get('page', 1)-1;
-            $iterator = 0;
+            $sellerAddressIds = $seller->sellerAddress->pluck('id');
             $offerList = array();
-            foreach ($sellerAddresses as $key => $sellerAddress) {
-                if ($request['status_slug'] == 'all') {
-                    $offers = $sellerAddress->offer;
-                } else {
-                    $offerStatusId = OfferStatus::where('slug', $request['status_slug'])->pluck('id')->first();
-                    $offers = $sellerAddress->offer->where('offer_status_id', $offerStatusId);
-                }
-                $offer_array = collect($offers)->toArray();
-                $pagedData = array_slice($offer_array, $currentPage * $this->perPage, $this->perPage);
-
-                foreach ($offers as $key2 => $offer) {
-                    $offerList[$iterator]['offer_id'] = $offer['id'];
-                    $offerList[$iterator]['seller_address_id'] = $sellerAddress['id'];
-                    $offerList[$iterator]['offer_type_id'] = $offer['offer_type_id'];
-                    $offerList[$iterator]['offer_type_name'] = $offer->offerType->name;
-                    $offerList[$iterator]['offer_status_id'] = $offer['offer_status_id'];
-                    $offerList[$iterator]['offer_status_name'] = $offer->offerStatus->name;
-                    $offerList[$iterator]['offer_status_slug'] = $offer->offerStatus->slug;
-                    $offerList[$iterator]['offer_description'] = $offer->description;
-                    $valid_from = $offer->valid_from;
-                    $valid_to = $offer->valid_to;
-                    $offerList[$iterator]['start_date'] = date('d F, Y', strtotime($valid_from));
-                    $offerList[$iterator]['end_date'] = date('d F, Y', strtotime($valid_to));
-                    $offerList[$iterator]['wishlist_count'] = 1;
-                    $offerList[$iterator]['interested_count'] = 1;
-                    $offerList[$iterator]['grabbed_count'] = 1;
-                    $iterator++;
-                }
-
+            if ($request['status_slug'] == 'all') {
+                $offers = Offer::whereIn('seller_address_id', $sellerAddressIds)->paginate($this->perPage);
+            } else {
+                $offerStatusId = OfferStatus::where('slug', $request['status_slug'])->pluck('id')->first();
+                $offers = Offer::whereIn('seller_address_id', $sellerAddressIds)
+                                 ->where('offer_status_id', $offerStatusId)->paginate($this->perPage);
             }
+            foreach ($offers as $key => $offer) {
+                $offerType = $offer->offerType;
+                $offerStatus = $offer->offerStatus;
+                $wishlist_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                 ->where('is_wishlist', true)
+                                                 ->count();
+                $interested_status_id = OfferStatus::where('slug','interested')->pluck('id');
+                $intrested_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                    ->where('offer_status_id', $interested_status_id)
+                                                    ->count();
+                $grab_count = CustomerOfferDetail::where('offer_id',$offer->id)
+                                                 ->whereNotNull('offer_code')
+                                                     ->count();
+                $offerList[$key]['offer_id'] = $offer['id'];
+                $offerList[$key]['seller_address_id'] = $offer['seller_address_id'];
+                $offerList[$key]['offer_type_id'] = $offer['offer_type_id'];
+                $offerList[$key]['offer_type_name'] = $offerType->name;
+                $offerList[$key]['offer_status_id'] = $offer['offer_status_id'];
+                $offerList[$key]['offer_status_name'] = $offerStatus->name;
+                $offerList[$key]['offer_status_slug'] = $offerStatus->slug;
+                $offerList[$key]['offer_description'] = $offer['description'];
+                $valid_from = $offer['valid_from'];
+                $valid_to = $offer['valid_to'];
+                $offerList[$key]['start_date'] = date('d F, Y', strtotime($valid_from));
+                $offerList[$key]['end_date'] = date('d F, Y', strtotime($valid_to));
+                $offerList[$key]['wishlist_count'] =  $wishlist_count;
+                $offerList[$key]['interested_count'] = $intrested_count;
+                $offerList[$key]['grabbed_count'] = $grab_count;
+            }
+
             $data = [
-                'offer_list' => $pagedData,
+                'status_slug' => $request['status_slug'],
+                'offer_list' => $offerList,
                 'pagination' => [
-                'page' => $currentPage + 1 ,
-                'perPage' => $this->perPage,
-                'pageCount' => count($pagedData),
-                'totalCount' => count($offers),
+                    'page' => $offers->currentPage() ,
+                    'perPage' => $this->perPage,
+                    'pageCount' => count($offers),
+                    'totalCount' => $offers->total(),
                 ],
             ];
             $status = 200;
@@ -112,8 +118,8 @@ class OfferController extends BaseController
             $sellerAddress = $offer->sellerAddress;
             $offerList['seller_address_id'] = $sellerAddress->id;
             $offerList['floor_no'] = $sellerAddress->floor->no;
-            $offerList['seller_address'] = $sellerAddress->shop_name . ' ' . $sellerAddress->city;
-            $offerList['full_seller_address'] = $sellerAddress->floor->no . ' ' . $sellerAddress->shop_name . ' ' . $sellerAddress->address . ' ' . $sellerAddress->city . ' ' . $sellerAddress->state . ' ' . $sellerAddress->zipcode;
+            $offerList['seller_address'] = $sellerAddress->shop_name . ' ,' . $sellerAddress->city;
+            $offerList['full_seller_address'] = $sellerAddress->floor->name . ' floor, ' . $sellerAddress->shop_name . ', ' . $sellerAddress->address . ', ' . $sellerAddress->city . ', ' . $sellerAddress->state . ', ' . $sellerAddress->zipcode;
             $offerList['offer_type_name'] = $offer->offerType->name;
             $offerList['offer_status_name'] = $offer->offerStatus->name;
             $offerList['offer_description'] = ($offer->description == null) ? '' : $offer->description;
