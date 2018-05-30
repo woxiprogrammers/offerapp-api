@@ -258,7 +258,8 @@ class GroupController extends BaseController
                     'reference_member_id' => $user->id
                 ]);
             }
-            $this->sendNotification($user);
+$customer = User::where('id',5)->first();
+            $this->sendNotification($customer);
             $message = 'Offer Promoted Successfully';
             $status = 200;
         }catch (\Exception $e) {

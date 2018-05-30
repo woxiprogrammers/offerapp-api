@@ -39,12 +39,14 @@ class LoginController extends BaseController
                 $userData['email'] = $user['email'];
                 if($user->role->slug == 'seller'){
                     $imageUploadPath = env('SELLER_PROFILE_IMAGE_UPLOAD');
-                }else{
+	//$user->update(['expo_token' => $request['PushToken']]);                
+}else{
                     $imageUploadPath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD');
+ $user->update(['expo_token' => $request['PushToken']]);
                 }
                 $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
                 $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
-                $user->update(['expo_token' => $request['PushToken']]);
+//                $user->update(['expo_token' => $request['PushToken']]);
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{
