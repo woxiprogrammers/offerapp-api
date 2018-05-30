@@ -21,8 +21,8 @@ $app->post('forget_password',array('uses' => 'Auth\LoginController@forgotPasswor
 
 
 $app->post('register',array('uses' => 'Auth\RegisterController@register'));
-$app->post('getOtp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
-$app->post('verifyOtp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
+$app->post('get_otp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
+$app->post('verify_otp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
     $app->post('data',array('uses' => 'Customer\CustomerController@getUserData'));
@@ -94,6 +94,20 @@ $app->group(['prefix' => 'customer'], function () use($app){
 });
 
 $app->group(['prefix' => 'seller'], function () use($app){
+    $app->post('data',array('uses' => 'Seller\SellerController@getUserData'));
+
+    $app->group(['prefix' => 'change_credential'], function () use($app){
+        $app->post('mobile_no',array('uses' => 'Seller\SellerController@changeCredential'));
+
+        $app->post('password',array('uses' => 'Seller\SellerController@changeCredential'));
+    });
+
+    $app->group(['prefix' => 'profile'], function () use($app){
+        $app->post('picture',array('uses' => 'Seller\SellerController@editProfilePicture'));
+        $app->post('edit',array('uses' => 'Seller\SellerController@editProfile'));
+    });
+
+
     $app->group(['prefix' => 'account'], function () use($app) {
         $app->get('info',array('uses' => 'Seller\SellerController@getAccountInfo'));
         $app->post('edit',array('uses' => 'Seller\SellerController@editAccountInfo'));
