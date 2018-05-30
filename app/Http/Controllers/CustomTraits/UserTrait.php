@@ -128,7 +128,6 @@ trait UserTrait{
 
     public function changeCredential(Request $request){
         try{
-            $message = '';
             $user = Auth::user();
             if($request['credentialSlug'] == 'mobile_no'){
                 $newMobileNo = $request['mobile_no'];
@@ -139,8 +138,7 @@ trait UserTrait{
                     ]);
                     $message = 'Mobile No Updated Successfully';
                     $status = 200;
-
-                    //    Auth::logout();
+                        JWTAuth::invalidate($request['token']);
                  }else{
                     $message = 'Invalid Otp';
                     $status = 401;
