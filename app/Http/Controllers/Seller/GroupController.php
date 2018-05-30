@@ -11,6 +11,7 @@ namespace App\Http\Controllers\Seller;
 use App\Customer;
 use App\GroupCustomer;
 use App\GroupMessage;
+use App\Http\Controllers\CustomTraits\NotificationTrait;
 use App\Offer;
 use App\User;
 use App\Group;
@@ -21,9 +22,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Mockery\Exception;
+use NotificationChannels\ExpoPushNotifications\ExpoChannel;
 
 class GroupController extends BaseController
 {
+    use NotificationTrait;
     protected $perPage = 5;
 
     public function __construct()
@@ -255,7 +258,7 @@ class GroupController extends BaseController
                     'reference_member_id' => $user->id
                 ]);
             }
-
+            $this->sendNotification($user);
             $message = 'Offer Promoted Successfully';
             $status = 200;
         }catch (\Exception $e) {

@@ -128,6 +128,10 @@ $app->group(['prefix' => 'seller'], function () use($app){
     });
 });
 
+$app->group(['prefix' => 'notification'], function() use($app){
+    $app->post('save-token', array('uses' => 'NotificationController@saveToken'));
+});
+
 $app->post('save-image',array('uses' => 'ImageController@image'));
 
 $app->post('getdistance',array('uses' => 'Customer\OfferController@getDistanceByGoogleApi'));

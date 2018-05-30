@@ -63,6 +63,7 @@ return [
             'driver' => 'eloquent',
             'model' => App\User::class,
         ],
+        NotificationChannels\ExpoPushNotifications\ExpoPushNotificationsServiceProvider::class,
     ],
 
     /*

@@ -11,7 +11,8 @@
         "tymon/jwt-auth": "1.0.0-beta.3",
         "cornford/googlmapper": "2.*",
         "laravelista/lumen-vendor-publish": "^2.1",
-        "ixudra/curl": "^6.16"
+        "ixudra/curl": "^6.16",
+        "alymosul/laravel-exponent-push-notifications": "^1.2"
 
     },
     "require-dev": {
