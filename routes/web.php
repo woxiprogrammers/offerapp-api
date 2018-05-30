@@ -131,3 +131,5 @@ $app->group(['prefix' => 'seller'], function () use($app){
 $app->post('save-image',array('uses' => 'ImageController@image'));
 
 $app->post('getdistance',array('uses' => 'Customer\OfferController@getDistanceByGoogleApi'));
+
+$app->post('auto_generate_offer',array('uses' => 'ExampleController@autoGenerateOffer'));
