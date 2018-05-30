@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Floor;
+use App\Http\Controllers\CustomTraits\UserTrait;
 use App\PaymentMode;
 use App\Seller;
 use App\SellerAddress;
@@ -25,6 +26,8 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class SellerController extends BaseController
 {
+    use UserTrait;
+
     public function __construct()
     {
         $this->middleware('jwt.auth');

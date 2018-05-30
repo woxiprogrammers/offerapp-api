@@ -27,7 +27,6 @@ class OtpVerificationController extends BaseController
                 $status = 412;
             }else{
                 $otp = $this->generateOtp();
-                //$otp = 'abcd';
 
                 $apiKey = urlencode(env('SMS_KEY'));
 
@@ -114,7 +113,7 @@ class OtpVerificationController extends BaseController
     public function generateOtp(){
         try{
 
-            $OTPCODE = str_random(4);
+            $OTPCODE = rand(1111,9999);
             return $OTPCODE;
 
         }catch(\Exception $e){
