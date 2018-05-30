@@ -17,18 +17,18 @@ $app->get('/', function () use ($app) {
 
 $app->post('login',array('uses' => 'Auth\LoginController@login'));
 $app->post('logout',array('uses' => 'Auth\LoginController@logout'));
-$app->post('forget_password',array('uses' => 'Auth\LoginController@forgotPassword'));
+$app->post('forget-password',array('uses' => 'Auth\LoginController@forgotPassword'));
 
 
 $app->post('register',array('uses' => 'Auth\RegisterController@register'));
-$app->post('get_otp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
-$app->post('verify_otp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
+$app->post('get-otp',array('uses' => 'Auth\OtpVerificationController@getOtp'));
+$app->post('verify-otp',array('uses' => 'Auth\OtpVerificationController@verifyOtp'));
 
 $app->group(['prefix' => 'customer'], function () use($app){
     $app->post('data',array('uses' => 'Customer\CustomerController@getUserData'));
 
-    $app->group(['prefix' => 'change_credential'], function () use($app){
-        $app->post('mobile_no',array('uses' => 'Customer\CustomerController@changeCredential'));
+    $app->group(['prefix' => 'change-credential'], function () use($app){
+        $app->post('mobile-no',array('uses' => 'Customer\CustomerController@changeCredential'));
 
         $app->post('password',array('uses' => 'Customer\CustomerController@changeCredential'));
     });
@@ -46,7 +46,7 @@ $app->group(['prefix' => 'customer'], function () use($app){
     $app->group(['prefix' => 'offer'], function () use($app){
         $app->post('detail',array('uses' => 'Customer\OfferController@getCustomerOfferDetail'));
 
-        $app->group(['prefix' => 'reach_in_time'], function () use($app) {
+        $app->group(['prefix' => 'reach-in-time'], function () use($app) {
             $app->get('listing', array('uses' => 'Customer\OfferController@getReachInTime'));
         });
 
@@ -80,8 +80,8 @@ $app->group(['prefix' => 'customer'], function () use($app){
             $app->post('listing',array('uses' => 'Customer\OfferController@mapOffers'));
         });
 
-        $app->group(['prefix' => 'augmented_reality'], function () use($app) {
-            $app->post('seller_info', array('uses' => 'Customer\OfferController@ARSellerInfo'));
+        $app->group(['prefix' => 'augmented-reality'], function () use($app) {
+            $app->post('seller-info', array('uses' => 'Customer\OfferController@ARSellerInfo'));
             $app->post('listing', array('uses' => 'Customer\OfferController@AROffers'));
         });
     });
@@ -96,8 +96,8 @@ $app->group(['prefix' => 'customer'], function () use($app){
 $app->group(['prefix' => 'seller'], function () use($app){
     $app->post('data',array('uses' => 'Seller\SellerController@getUserData'));
 
-    $app->group(['prefix' => 'change_credential'], function () use($app){
-        $app->post('mobile_no',array('uses' => 'Seller\SellerController@changeCredential'));
+    $app->group(['prefix' => 'change-credential'], function () use($app){
+        $app->post('mobile-no',array('uses' => 'Seller\SellerController@changeCredential'));
 
         $app->post('password',array('uses' => 'Seller\SellerController@changeCredential'));
     });
