@@ -155,7 +155,11 @@ class SellerController extends BaseController
             $size_of_google_addresses = sizeof($google_addresses);
             foreach ($google_addresses as $key => $google_address) {
                 if ($key < $size_of_google_addresses - 3) {
-                    $address = $address . ', ' . $google_address;
+                    if($address == ''){
+                        $address = $google_address;
+                    }else{
+                        $address = $address . ', ' . $google_address;
+                    }
                 } elseif ($key == $size_of_google_addresses - 3) {
                     $city = $google_address;
                 } elseif ($key == $size_of_google_addresses - 2) {
