@@ -44,6 +44,7 @@ class LoginController extends BaseController
                 }
                 $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
                 $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
+                $user->update(['expo_token' => $request['PushToken']]);
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{
