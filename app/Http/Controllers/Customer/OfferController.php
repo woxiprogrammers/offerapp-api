@@ -699,7 +699,11 @@ class OfferController extends BaseController
                 }else{
                     $category_id = Category::where('category_id',$customer_category_id)
                         ->pluck('id')->all();
-                    $sort_by_category = $offers->whereIn('category_id', $category_id);
+                    if(sizeof($category_id)>0){
+                        $sort_by_category = $offers->whereIn('category_id', $category_id);
+                    }else{
+                        $sort_by_category = $offers->whereIn('category_id', $customer_category_id);
+                    }
                 }
 
                 $offer_type_id = OfferType::where('slug', $customer_offer_type_slug )
