@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Category;
 use App\Offer;
 use App\OfferImage;
+use App\OfferStatus;
 use App\Role;
 use App\Seller;
 use App\SellerAddress;
@@ -43,7 +44,7 @@ class ExampleController extends Controller
             $lastName = ['Sharma', 'Joshi', 'Rathod', 'Choudhary', 'Chavan', 'Gupta'];
             $shop_name = ['Levis', 'Bata', 'Lenovo', 'Fittnes Club', 'Champion', 'McDonald\'s', 'Hotel P. K'];
             $category_slug = ['clothing', 'footwear', 'laptop-tablet', 'gym', 'sport', 'snacks-center', 'night-life'];
-
+            $offer_status_id = OfferStatus::where('type','seller')->pluck('id');
             $offer_image_name = ['offer1.jpg','offer2.jpg','offer3.jpg'];
             $address = '';
             $city = '';
@@ -121,7 +122,7 @@ class ExampleController extends Controller
                 ]);
                 $seller_addresses[$iterator] = $seller_address;
 
-                for ($offerType = 1; $offerType <= 1; $offerType++){
+                for ($offerType = 1; $offerType <= 4; $offerType++){
                     $category_id = Category::where('slug', $category_slug[$category_type_index])->pluck('id')->first();
                     $start_date = Carbon::now();
                     $end_date = Carbon::now()->modify('+7 day');
@@ -130,7 +131,7 @@ class ExampleController extends Controller
                         'category_id' => $category_id,
                         'offer_type_id' => $offerType,
                         'seller_address_id' => $seller_address->id,
-                        'offer_status_id' => rand(1, 11),
+                        'offer_status_id' => rand(0, sizeof($offer_status_id)),
                         'description' => 'Enjoy shopping at '.$seller_address->shop_name,
                         'valid_from' => date('Y-m-d H:i',strtotime($start_date)),
                         'valid_to' => date('Y-m-d H:i',strtotime($end_date))
