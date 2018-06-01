@@ -117,7 +117,7 @@ class ExampleController extends Controller
                     'state' => $state,
                     'longitude' => $location->getLongitude(),
                     'latitude' => $location->getLatitude(),
-                    'is_active'=> false,
+                    'is_active'=> true,
 
                 ]);
                 $seller_addresses[$iterator] = $seller_address;
