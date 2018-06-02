@@ -49,14 +49,14 @@ class OfferController extends BaseController
             $customer_id = Customer::where('user_id', $user_id)->pluck('id')->first();
             if($offer_status == 'wishlist'){
                 $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
-                                    ->where('is_wishlist',true)
-                                    ->paginate($this->perPage);
+                    ->where('is_wishlist',true)
+                    ->paginate($this->perPage);
             }elseif ($offer_status == 'interested'){
-            $offer_status = 'interested';
-            $offer_status_id = OfferStatus::where('slug',$offer_status)->pluck('id')->first();
-            $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
-                                ->where('offer_status_id',$offer_status_id)
-                                ->paginate($this->perPage);
+                $offer_status = 'interested';
+                $offer_status_id = OfferStatus::where('slug',$offer_status)->pluck('id')->first();
+                $customer_offers = CustomerOfferDetail::where('customer_id',$customer_id)
+                    ->where('offer_status_id',$offer_status_id)
+                    ->paginate($this->perPage);
             }else{
                 $customer_offers = array();
             }
@@ -143,18 +143,18 @@ class OfferController extends BaseController
             $customerOffer = CustomerOfferDetail::where('customer_id',$customerId)
                 ->where('offer_id',$offer['id'])
                 ->first();
-                if (count($customerOffer)>0){
-                    $offers['addedToWishList'] = $customerOffer->is_wishlist;
-                    $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
-                    if($offer_status == 'interested'){
-                        $offers['addedToInterested'] = true;
-                    }else{
-                        $offers['addedToInterested'] = false;
-                    }
+            if (count($customerOffer)>0){
+                $offers['addedToWishList'] = $customerOffer->is_wishlist;
+                $offer_status = OfferStatus::where('id',$customerOffer->offer_status_id)->pluck('slug')->first();
+                if($offer_status == 'interested'){
+                    $offers['addedToInterested'] = true;
                 }else{
-                    $offers['addedToWishList'] = false;
                     $offers['addedToInterested'] = false;
                 }
+            }else{
+                $offers['addedToWishList'] = false;
+                $offers['addedToInterested'] = false;
+            }
 
             $data = [
                 'offerDetail' => $offers,
@@ -612,12 +612,17 @@ class OfferController extends BaseController
             $offerTypeSlug = $request['offerTypeSlug'];
 
             if($offerTypeSlug == 'all'){
-                $offers = Offer::where('seller_address_id', $seller_address_id)->get();
+                $status_id = OfferStatus::where('slug','approved')->pluck('id')->first();
+                $offers = Offer::where('seller_address_id', $seller_address_id)
+                    ->where('offer_status_id', $status_id)->get();
+
 
             }else{
                 $offer_type_id = OfferType::where('slug', $offerTypeSlug)->pluck('id')->first();
+                $status_id = OfferStatus::where('slug','approved')->pluck('id')->first();
                 $offers = Offer::where('seller_address_id', $seller_address_id)
-                    ->where('offer_type_id', $offer_type_id)->get();
+                    ->where('offer_type_id', $offer_type_id)
+                    ->where('offer_status_id', $status_id)->get();
             }
             if(count($offers)>0){
                 foreach ($offers as $key => $offer){
@@ -686,8 +691,10 @@ class OfferController extends BaseController
                 ->whereBetween('longitude', [$minLon, $maxLon])
                 ->pluck('id')->all();
 
+            $status_id = OfferStatus::where('slug','approved')->pluck('id')->first();
             $offers = Offer::whereIn('seller_address_id', $near_by_seller_addresses)
-                            ->get();
+                ->where('offer_status_id', $status_id)->get();
+
 
             if($customer_category_id > 0){
                 $category_id = Category::where('id',$customer_category_id)
@@ -773,7 +780,7 @@ class OfferController extends BaseController
         try{
             return rad2deg(acos((sin(deg2rad($point1['latitude'])) *
                     sin(deg2rad($point2['latitude']))) +
-                    (cos(deg2rad($point1['latitude'])) *
+                (cos(deg2rad($point1['latitude'])) *
                     cos(deg2rad($point2['latitude'])) *
                     cos(deg2rad($point1['longitude'] - $point2['longitude'])))));
         }catch (\Exception $e){
@@ -800,7 +807,7 @@ class OfferController extends BaseController
             $apiKey = urlencode(env('GOOGLE_API_KEY'));
 
             $data = Curl::to('https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins='.$origin.'&destinations='.$destination.'&key='.$apiKey)
-                        ->post();
+                ->post();
 
         }catch(\Exception $e){
 
@@ -823,8 +830,8 @@ class OfferController extends BaseController
 
             $customerOfferDetail = CustomerOfferDetail::where('offer_id', $offerId)->first();
             //if(count($customerOfferDetail->offer_code)>0){
-                if($customerOfferDetail->offer_code != null){
-                    $grab_code = str_random(5);
+            if($customerOfferDetail->offer_code != null){
+                $grab_code = str_random(5);
 
                 $customerOfferDetail->update([
                     'offer_code' => $grab_code
