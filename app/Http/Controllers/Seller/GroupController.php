@@ -84,16 +84,20 @@ class GroupController extends BaseController
 
             $check_customer_group_count = GroupCustomer::where('customer_id', $customer_id)->where('group_id',$group_id)->pluck('id')->count();
 
-            if($check_customer_group_count > 0) {
+            if($check_customer_group_count > 0 ) {
                 $message = 'User Already Exist';
                 $status = 412;
-            }else{
+            }elseif(count($user_id) > 0 && count($customer_id) > 0){
                 GroupCustomer::create([
                     'group_id' => $group_id,
                     'customer_id' => $customer_id
                 ]);
                 $message = 'Success';
                 $status = 200;
+            }else{
+
+                $message = 'Invalid Mobile Number';
+                $status = 201;
             }
         } catch (\Exception $e) {
             $message = "Fail";
