@@ -9,6 +9,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Customer;
+use App\Seller;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,12 +40,16 @@ class LoginController extends BaseController
                 $userData['lastName'] = $user['last_name'];
                 $userData['email'] = $user['email'];
                 if($user->role->slug == 'seller'){
-                    $imageUploadPath = env('SELLER_PROFILE_IMAGE_UPLOAD');
+                    $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
+                    $imageUploadPath = env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR;
                 }else{
-                    $imageUploadPath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD');
+                    $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
+                    $imageUploadPath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR;
+
                 }
+                $imageUploadPath .= $user['profile_picture'];
                 $userData['mobileNo'] = ($user['mobile_no'] != null) ? $user['mobile_no'] : '';
-                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath.$user['profile_picture'];
+                $userData['profilePic'] = ($user['profile_picture'] == null) ? '/uploads/user_profile_male.jpg' : $imageUploadPath;
                 $message = "Logged in successfully!!";
                 $status = 200;
             }else{
