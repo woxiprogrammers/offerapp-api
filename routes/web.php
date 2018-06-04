@@ -130,6 +130,7 @@ $app->group(['prefix' => 'seller'], function () use($app){
         $app->post('listing', array('uses' => 'Seller\OfferController@getOfferListing'));
         $app->post('detail',array('uses' => 'Seller\OfferController@getOfferDetail'));
         $app->post('interested-listing', array('uses' => 'Seller\OfferController@getOfferInterestedListing'));
+        $app->post('check-grab-code', array('uses' => 'Seller\OfferController@checkGrabCode'));
     });
     $app->group(['prefix' => 'group'], function () use($app) {
         $app->get('list', array('uses' => 'Seller\GroupController@getGroupList'));

@@ -177,11 +177,11 @@ trait UserTrait{
             $user = Auth::user();
             $data = array();
             if($user->role->slug == 'seller'){
-                $sha1SellerId = Seller::where('user_id', $user['id'])->pluck('id')->first();
+                $sha1SellerId = sha1(Seller::where('user_id', $user['id'])->pluck('id')->first());
                 $imagePath = env('SELLER_PROFILE_IMAGE_UPLOAD').$sha1SellerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
 
             }else{
-                $sha1CustomerId = Customer::where('user_id', $user['id'])->pluck('id')->first();
+                $sha1CustomerId = sha1(Customer::where('user_id', $user['id'])->pluck('id')->first());
                 $imagePath = env('CUSTOMER_PROFILE_IMAGE_UPLOAD').$sha1CustomerId.DIRECTORY_SEPARATOR.$user['profile_picture'];
             }
             $data['userData']['firstName'] = $user['first_name'];

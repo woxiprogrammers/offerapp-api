@@ -318,4 +318,40 @@ class OfferController extends BaseController
         ];
         return response()->json($response, $status);
     }
+
+    public function checkGrabCode(Request $request){
+        try{
+            $status = 200;
+            $user = Auth::user();
+            $sellerUser = Seller::where('user_id',$user['id'])->first();
+            $customerOfferDetail = CustomerOfferDetail::where('offer_code',$request['offer_code'])->first();
+            $sellerId = Seller::join('seller_addresses','seller_addresses.seller_id','=','sellers.id')
+                                ->join('offers','offers.seller_address_id','=','seller_addresses.id')
+                                ->where('offers.id',$customerOfferDetail['offer_id'])
+                                ->pluck('sellers.id')->first();
+            if($sellerUser['id'] == $sellerId){
+                $customerOfferDetail->update(['offer_status_id' => OfferStatus::where('slug','grabbed')->pluck('id')->first()]);
+                $message = "Grabbed Successfully";
+            }else{
+                $message = "Invalid Grab code";
+            }
+
+        }catch(\Exception $e){
+            $message = "Fail";
+            $status = 500;
+            $data = [
+                'action' => 'Create Seller Offer',
+                'exception' => $e->getMessage(),
+                'params' => $request->all()
+
+            ];
+            Log::critical(json_encode($data));
+            abort(500);
+        }
+        $response = [
+            'status' => $status,
+            'message' => $message,
+        ];
+        return response()->json($response, $status);
+    }
 }
