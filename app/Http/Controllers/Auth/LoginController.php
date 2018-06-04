@@ -106,8 +106,8 @@ class LoginController extends BaseController
 
     public function forgotPassword(Request $request){
         try{
-            $user = User::where('mobile_no', $request['mobile_no'])->first();
-            if(count($user)>0){
+            $user = User::where('mobile_no', $request['mobileNo'])->first();
+            if(count($user) > 0){
                 $user->update([
                     'password' => Hash::make($request['password'])
                 ]);

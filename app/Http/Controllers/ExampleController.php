@@ -153,7 +153,7 @@ class ExampleController extends Controller
                     $extension = $splitImageName[1];
                     $filename = mt_rand(1,10000000000).sha1(time()).".{$extension}";
                     $imageUploadNewPath .= DIRECTORY_SEPARATOR . $filename;
-                    /*File::copy($temp_offer_image, $imageUploadNewPath);*/
+                    File::copy($temp_offer_image, $imageUploadNewPath);
                     $offerImage = OfferImage::create(['name' => $filename, 'offer_id' => $offer->id]);
                     $offers[$iterator]['offerImages'][$offerType] = $offerImage;
                 }
