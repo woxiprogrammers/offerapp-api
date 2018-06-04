@@ -829,7 +829,7 @@ class OfferController extends BaseController
             $offerId = $request['offerId'];
 
             $customerOfferDetail = CustomerOfferDetail::where('offer_id', $offerId)->first();
-            if(count($customerOfferDetail->offer_code) > 0){
+            if(count($customerOfferDetail) > 0){
                 $grab_code = str_random(5);
 
                 $customerOfferDetail->update([
